@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0E1526">
-<meta name="description" content="UT Bot Alerts, from its open-source code: an ATR trailing stop on the close. What Key Value, ATR Period and the Heikin Ashi option change, and when it repaints.">
-<link rel="canonical" href="https://taughttotrade.com/ut-bot-alerts">
-<title>UT Bot Alerts explained: key value, ATR period, repainting | Taught to Trade</title>
+<meta name="description" content="The LuxAlgo Nadaraya-Watson Envelope, from its open-source code: what 8, 3 and close mean, why the default mode repaints, and what the non-repainting mode is.">
+<link rel="canonical" href="https://taughttotrade.com/nadaraya-watson-envelope">
+<title>Nadaraya-Watson Envelope explained: settings and repainting | Taught to Trade</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -39,60 +39,30 @@
 <body>
 <header class="topbar"><div class="wrap nav"><a class="brand" href="https://taughttotrade.com/">Taught to Trade<span>Systems over signals.</span></a><nav class="nav-actions" aria-label="Primary"><a class="nav-link" href="https://taughttotrade.com/#scripts">Scripts</a><a class="nav-link" href="https://taughttotrade.com/#letter">Letter</a><a class="nav-link" href="https://taughttotrade.com/#tools">Tools</a><a class="button" href="https://taughttotrade.gumroad.com/l/otnor" target="_blank" rel="noopener">Subscribe $19/mo</a></nav></div></header>
 <main id="top" class="article-page"><article class="article">
-<h1>UT Bot Alerts explained: what the code actually computes</h1>
-<p>UT Bot Alerts is a free, open-source TradingView script published by QuantNomad in 2020. It adds alerts to "UT Bot" by Yo_adriiiiaan, who credits HPotter for the original code. Because the code is open, nothing has to be guessed. It is about 40 lines and does one thing: it keeps an ATR trailing stop on the close and labels the bar where price crosses it.</p>
-<h2>What it computes</h2>
-<p>On every bar (our paraphrase, not the original code):</p>
-<pre><code>loss = Key Value x ATR(ATR Period)
-price = close (or the Heikin Ashi close, if that option is on)
-if price and previous price are both above the previous stop: stop = max(previous stop, price - loss)   (can only rise)
-else if both are below it: stop = min(previous stop, price + loss)   (can only fall)
-else (price has just crossed the previous stop): stop = price - loss if price is above it, otherwise price + loss
-"Buy" label: the bar where price moves from below the stop to above it
-"Sell" label: the reverse
-bar colour: green above the stop, red below</code></pre>
-<p>Three details many write-ups get wrong:</p>
-<ul>
-<li><strong>There is no moving-average filter.</strong> The code compares an EMA of length 1 with the stop. An EMA of length 1 equals the price itself, so the "crossover" is simply price crossing the stop. Every label is a stop flip, so Buy and Sell always alternate.</li>
-<li><strong>The stop line is not drawn.</strong> The Alerts version plots only the labels and bar colours. Yo_adriiiiaan's original draws the line.</li>
-<li><strong>The alert conditions "UT Long" and "UT Short"</strong> are true on exactly the labelled bars.</li>
-</ul>
-<h2>What the settings change</h2>
-<ul>
-<li><strong>Key Value</strong> (default 1): the stop's distance in ATRs. Price must give back roughly Key Value x ATR from its best close before the label flips, so a larger value means fewer flips, each one later. QuantNomad's code declares this input as a whole number, so 1.5 is not available; the original UT Bot defaulted to 3, in steps of 0.5. Guides that disagree about "the default" are describing different scripts.</li>
-<li><strong>ATR Period</strong> (default 10): how quickly the stop's width reacts to a change in volatility. ATR is Wilder-smoothed true range of the chart's own candles, even with the Heikin Ashi option on.</li>
-<li><strong>Signals from Heikin Ashi Candles</strong> (default off): the script requests the Heikin Ashi close for the same symbol and timeframe, with lookahead off. A Heikin Ashi close is the average of the bar's open, high, low and close, so the option swaps the close for that four-price average. The smoothed Heikin Ashi open is never used.</li>
-</ul>
-<p>There is no best setting. A pair that looks good on a chart was usually picked after looking at that chart. What you choose is how many ATRs of give-back you accept before the label changes side.</p>
-<h2>Does UT Bot Alerts repaint?</h2>
-<ul>
-<li><strong>Closed bars: no.</strong> Each bar's stop uses only that bar and earlier ones, and the Heikin Ashi request uses the chart's own timeframe with lookahead off, so no later data leaks in. A closed bar's label stays put on reload.</li>
-<li><strong>The live bar: yes, until it closes.</strong> The close moves with every tick and the code has no confirmed-bar check, so a label can appear mid-bar and be gone at the close. An alert set to "Once per bar" can fire on such a label; "Once per bar close" waits for the bar to finish.</li>
-</ul>
-<h2>Heikin Ashi and backtests</h2>
-<p>UT Bot Alerts places no orders. QuantNomad's separate "UT Bot Strategy" runs the same logic, going long at each Buy label and reversing to short at each Sell. On a normal candle chart the Heikin Ashi option only changes when orders trigger; fills are still at real prices. Synthetic fills come from setting the chart itself to Heikin Ashi candles, unless "Fill orders using standard OHLC" is ticked in the strategy's properties. The published strategy also sets no commission or slippage.</p>
-<h2>UT Bot vs Supertrend</h2>
-<p>Both are ATR trailing stops that ratchet with the move, flip when a close crosses them, and have two states with no neutral one. The differences:</p>
-<ul>
-<li>UT Bot hangs its stop from the close; <a href="/supertrend">Supertrend</a> uses the bar's midpoint, (high + low) / 2.</li>
-<li>UT Bot Alerts defaults to 1 ATR; Supertrend is usually run at 3, as was the original UT Bot. A tighter stop flips more often.</li>
-<li>Supertrend tracks two bands on every bar; UT Bot keeps one line and restarts it on each flip.</li>
-</ul>
-<h2>The audit version on TradingView</h2>
-<p>We rebuilt this stop from scratch and published it free and open source: <a href="https://www.tradingview.com/script/9U7ccJIN-Taught-to-Trade-ATR-Trailing-Stop-with-Flip-Audit/" target="_blank" rel="noopener">Taught to Trade - ATR Trailing Stop with Flip Audit</a>. At a distance of 1 and an ATR length of 10 on the close, it draws the same stop and the same flip bars as UT Bot Alerts. It adds what the original leaves out: the stop line drawn on the chart, fractional distances, flips confirmed only once the bar closes, Heikin Ashi computed consistently, and a panel that counts how many flips were undone within a few bars. That last number is the cost of a tight setting, on your own chart.</p>
+<h1>Nadaraya-Watson Envelope explained: settings and repainting</h1>
+<p>The Nadaraya-Watson Envelope on TradingView is LuxAlgo's open-source script, one of the most-boosted indicators on the platform. It draws a smooth curve through price with a band above and below, and triangles where price pokes outside the band. This page explains what it calculates, from the published code, and answers the question its audience keeps asking: does it repaint?</p>
+<p><strong>Short answer: in its default setting, yes, by design.</strong> The script has a second mode that does not repaint on closed bars, and it looks noticeably different.</p>
+<h2>What "8, 3, close" means</h2>
+<p>The script has three main settings, and the defaults are why people search for "8 3 close":</p>
+<ul><li><strong>Bandwidth (8):</strong> how wide the averaging window is. Each bar's value is a weighted average of nearby bars, with weights that fall off in a bell curve. At 8, a bar 8 bars away counts about 61% as much as the centre bar, 16 bars away about 14%, and 24 bars away about 1%. Raise it for a smoother, slower curve; lower it for one that hugs price.</li><li><strong>Multiplier (3):</strong> how far the band sits from the curve, in units of the average distance between price and the curve. 3 means three times that average gap.</li><li><strong>Source (close):</strong> the price the curve is built from.</li></ul>
+<p>There is also a fourth input, <strong>Repainting Smoothing</strong>, and it is switched <strong>on</strong> by default.</p>
+<h2>Why the default mode repaints</h2>
+<p>A Nadaraya-Watson estimator is a kernel regression: a smoothed value at each point, made from a weighted average of the points around it, on both sides.</p>
+<p>In the default mode the script recalculates the whole curve on the latest bar. For every bar in the last 500, it averages the bars before it <strong>and the bars after it</strong>. A point from two weeks ago is smoothed using prices from the days that followed. That is why the curve turns so neatly at tops and bottoms: it already knows what came next.</p>
+<p>Two things follow:</p>
+<ol><li><strong>The recent part of the curve moves.</strong> The newest point has no bars after it, so it is a one-sided average. As each new bar arrives, the last stretch of the curve is redrawn with information it did not have before.</li><li><strong>The triangles are not a record.</strong> They mark where price crossed the band as it is drawn now. From the code, the script draws them only on the latest bar, and it does not delete triangles drawn on earlier updates. So the ones you see after reloading the chart can differ from the ones you watched appear live.</li></ol>
+<p>The script says so itself: in this mode it puts "Repainting Mode Enabled" in a box on the chart. This mode also draws its curve and bands as line objects, so there are no plotted values an alert or a strategy could read. The script has no alert conditions at all.</p>
+<p>None of this makes it a bad picture of what price did. It is a fair way to see the shape of past swings. It cannot tell you where the band was at the time.</p>
+<h2>The non-repainting mode, and what it costs</h2>
+<p>Turn <strong>Repainting Smoothing</strong> off and the script switches to what LuxAlgo calls the endpoint method. Each bar's value is a bell-curve-weighted average of that bar and the <strong>499 bars before it</strong>, newest weighted most. No future bars are used, so once a bar closes its value does not change. Like any indicator, the current bar still moves until it closes.</p>
+<p>The price of that honesty is lag. With bandwidth 8, the average age of the data in each value is about <strong>6 bars</strong>. The curve now turns after price turns, the way a moving average does. The bands are plotted, so you can set alerts on them, and the triangles come from a plain cross of the close over the upper or lower band.</p>
+<p>If you compare the two modes on the same chart, the difference between the neat curve and the lagging one is what the future bars were contributing.</p>
 <h2>Where it fails</h2>
-<ul>
-<li>Every label is late by construction: roughly Key Value x ATR of give-back from the best close.</li>
-<li>At the default 1 ATR the stop sits about one average bar's range from the close, so an ordinary pullback bar can flip it.</li>
-<li>Two states, no neutral: it is always on one side, trending or not.</li>
-<li>On the live bar, a label and a "Once per bar" alert can vanish before the close.</li>
-<li>The Heikin Ashi option mixes a four-price average with regular-candle ATR; a strategy run on a Heikin Ashi chart fills at prices that never traded unless the standard-OHLC setting is on.</li>
-<li>Many scripts share the name, so two "UT Bot Alerts" with the same settings may not be the same code.</li>
-<li>A Buy label records that price crossed a stop. Treating it as the start of a trend is a different claim, and nothing in the code tests it.</li>
-</ul>
-<h2>The Teardown Letter</h2>
-<p>The monthly Teardown Letter takes one popular indicator apart per issue in the same way: what it computes, what follows from the arithmetic, and where it misleads. Issues so far: RSI, MACD, order blocks, Fibonacci and Supertrend. New subscribers get every past issue.</p>
-<p class="also-explained">Also explained: <a href="/repaint-checker">Repaint checker</a>, <a href="/vwap">VWAP</a>, <a href="/supertrend">Supertrend</a>, <a href="/rsi">RSI</a>, <a href="/nadaraya-watson-envelope">Nadaraya-Watson Envelope</a></p>
+<ul><li><strong>In the default mode, nothing on the chart existed at the time.</strong> Judging the indicator by how well its past triangles line up with turns is judging it with hindsight built in.</li><li><strong>Lag in the honest mode.</strong> About 6 bars at the default bandwidth. A lower bandwidth cuts the lag and adds noise.</li><li><strong>A fixed-width band in the default mode.</strong> The band width is one number for the whole window, so it is too wide in quiet stretches and too narrow in volatile ones.</li><li><strong>Long warm-up in the non-repainting mode.</strong> From our reading of the code, the bands need roughly 1,000 bars of history before they appear. On a weekly chart of a young symbol you may see nothing.</li><li><strong>A band touch is not a reversal.</strong> Price can ride outside a volatility band for a long time in a strong trend.</li></ul>
+<h2>Does the Nadaraya-Watson Envelope repaint?</h2>
+<p>Default settings: yes. Each historical point averages bars that came after it, and the curve and triangles are redrawn as new bars arrive. With <strong>Repainting Smoothing</strong> off: no, not on closed bars. It becomes a lagging, causal moving average with bands, and only the live bar moves. Other authors publish their own non-repainting kernel versions; check any of them the same way, by asking whether a past value uses bars that came after it.</p>
+<p><em>Educational content only. Not investment advice, and not a recommendation to trade. Indicators describe past prices; none of them predicts the next one.</em></p>
+<p class="also-explained">Also explained: <a href="/repaint-checker">Repaint checker</a>, <a href="/vwap">VWAP</a>, <a href="/supertrend">Supertrend</a>, <a href="/rsi">RSI</a>, <a href="/ut-bot-alerts">UT Bot Alerts</a></p>
 <div class="article-actions"><a class="button" href="https://taughttotrade.gumroad.com/l/otnor" target="_blank" rel="noopener">Subscribe to the Teardown Letter: $19/mo</a><a class="back" href="https://taughttotrade.com/">Back to Taught to Trade</a></div>
 </article></main>
 <footer><div class="wrap foot"><p class="legal">Educational tools only—not investment advice. Trading involves substantial risk of loss. No performance claims. You set your own alerts; nothing here sends buy/sell signals.</p><div class="foot-links"><a href="https://www.tradingview.com/u/taughttotrade/" target="_blank" rel="noopener">TradingView</a><a href="https://taughttotrade.gumroad.com/" target="_blank" rel="noopener">Gumroad</a></div></div></footer>
