@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0E1526">
-<meta name="description" content="RSI is a smoothed ratio of up-closes to down-closes. The exact formula, what the length setting changes, why loaded history moves the number, and where it fails.">
-<link rel="canonical" href="https://taughttotrade.com/rsi">
-<title>RSI indicator explained: the formula, the settings, and why your RSI differs from mine | Taught to Trade</title>
+<meta name="description" content="How LazyBear&#x27;s Squeeze Momentum Indicator actually works, why its BB MultFactor setting does nothing, what the black and gray dots mean, and whether it repaints.">
+<link rel="canonical" href="https://taughttotrade.com/squeeze-momentum">
+<title>Squeeze Momentum Indicator (LazyBear) explained: the hidden 1.5 multiplier, settings and repainting | Taught to Trade</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -39,42 +39,39 @@
 <body>
 <header class="topbar"><div class="wrap nav"><a class="brand" href="https://taughttotrade.com/">Taught to Trade<span>Systems over signals.</span></a><nav class="nav-actions" aria-label="Primary"><a class="nav-link" href="https://taughttotrade.com/#scripts">Scripts</a><a class="nav-link" href="https://taughttotrade.com/#letter">Letter</a><a class="nav-link" href="https://taughttotrade.com/#tools">Tools</a><a class="button" href="https://taughttotrade.gumroad.com/l/otnor" target="_blank" rel="noopener">Subscribe $19/mo</a></nav></div></header>
 <main id="top" class="article-page"><article class="article">
-<h1>What RSI actually computes</h1>
-<p>The Relative Strength Index has one setting, a length (commonly 14), and one input: the change from each close to the next. Nothing else enters. Not the high, not the low, not volume.</p>
-<h2>The formula</h2>
-<pre><code>gain = max(close - previous close, 0)
-loss = max(previous close - close, 0)
-avg gain = previous avg gain + (gain - previous avg gain) / N
-avg loss = previous avg loss + (loss - previous avg loss) / N
-RS = avg gain / avg loss
-RSI = 100 - 100 / (1 + RS)</code></pre>
-<p>The "average" is Wilder's smoothing, an exponential filter with weight 1/N, not a simple mean of the last N bars. So RSI is a smoothed ratio of recent up-closes to recent down-closes, squashed onto 0 to 100.</p>
-<h2>Why your RSI(14) can differ from someone else's</h2>
-<p>Wilder's smoothing never fully forgets. With N = 14, all the bars older than 100 bars still hold about 0.06% of the weight, and it takes about 62 bars before the history you did not load drops below 1%. The value on your screen therefore depends a little on where your data starts. Two people on the same symbol and timeframe can see different decimals if one chart has 300 bars loaded and the other has 5,000. Platforms that seed the first average differently (a simple mean of the first N bars, or the first value) add a second small difference. Usually it is a rounding-sized gap; anything that depends on crossing an exact threshold inherits it.</p>
-<h2>What the length setting changes</h2>
-<ul>
-<li><strong>Shorter length:</strong> each new close moves the average more, so RSI swings wider and reaches 70 or 30 more often.</li>
-<li><strong>Longer length:</strong> RSI swings less and stays nearer 50.</li>
-<li>The 70 and 30 lines are conventions. Changing the length changes how often they are touched, so a threshold only means something together with its length.</li>
-</ul>
-<h2>The second line: what "RSI-based MA" is</h2>
-<p>TradingView's built-in RSI can draw a second line next to the RSI itself, labelled RSI-based MA (it is often shown in yellow next to a purple RSI). It is a moving average of the RSI values, set by the type and length under the indicator's smoothing settings. It adds no new information: it is the same close-to-close changes, averaged a second time, so it moves later than RSI. RSI length and MA length are separate settings, and changing one does not change the other.</p>
-<h2>What a reading means</h2>
-<p>A high RSI says recent closes have risen more than they have fallen, smoothed. That is all. Nothing in the formula knows what "too far" is, so "overbought" is a description of the recent past, not a forecast. In a steady trend RSI can stay above 70 or below 30 for weeks; that is the formula working as written. 50 means smoothed up-moves and down-moves are currently equal in size, nothing more.</p>
-<h2>Does RSI repaint?</h2>
-<p>Not on closed bars: once a bar has closed, its RSI value is fixed (given the same loaded history). On the live bar it changes with every tick until the close, so a cross of 70 or 30 seen mid-bar can be gone when the bar closes. RSI pulled from a higher timeframe onto a lower one is a separate case, and whether it changes after the fact depends on how the script requests that data.</p>
+<h1>Squeeze Momentum Indicator, explained from its source</h1>
+<p>LazyBear's Squeeze Momentum Indicator is one of the most-used free scripts on TradingView. It draws two things: a row of dots on the zero line, and a coloured histogram. This page explains both from the published source code, including one detail most guides miss: <strong>one of its settings is never used.</strong></p>
+<h2>What the dots mean</h2>
+<p>The dots compare two bands drawn around a 20-bar average of the close.</p>
+<ul><li><strong>Bollinger Bands</strong> are the average plus and minus a multiple of the standard deviation of the close.</li><li><strong>Keltner Channels</strong> are the same average plus and minus a multiple of the average true range. In this script that is a simple average of true range over 20 bars, not Wilder's ATR.</li></ul>
+<p>The dot colour tells you how they sit:</p>
+<ul><li><strong>Black:</strong> the Bollinger Bands are inside the Keltner Channels on both sides. This is the "squeeze": volatility measured by standard deviation is small compared with the bar ranges.</li><li><strong>Gray:</strong> the Bollinger Bands are outside the Keltner Channels on both sides. The squeeze has "fired", or never formed.</li><li><strong>Blue:</strong> neither. One band is inside and the other is outside.</li></ul>
+<h2>The setting that does nothing: BB MultFactor</h2>
+<p>The settings show "BB MultFactor 2.0" and "KC MultFactor 1.5". In the code, the Bollinger width is calculated with the <strong>KC</strong> multiplier:</p>
+<p><code>Bollinger width = 1.5 x standard deviation (KC MultFactor), not 2.0 x (BB MultFactor)</code></p>
+<p>So the BB MultFactor input is declared and never read. Set it to 1, 2 or 5 and the chart does not change. Changing KC MultFactor moves <strong>both</strong> bands at once.</p>
+<p>Why it matters: the classic squeeze idea compares 2-standard-deviation Bollinger Bands with 1.5-ATR Keltner Channels. With 1.5 standard deviations the Bollinger Bands are narrower, so they fit inside the Keltner Channels far more often.</p>
+<p>On SPY daily bars from 2010 to October 2026:</p>
+<ul><li>As coded, the squeeze was "on" on <strong>35% of bars</strong>, in 160 separate squeezes with a median length of 7 bars.</li><li>With the 2.0 multiplier the settings imply, it was on for <strong>10% of bars</strong>, in 89 squeezes with a median length of 3 bars.</li></ul>
+<p>Same chart, same rule as written in the settings, about three and a half times as many black dots. Neither version is "right", but you should know which one you are looking at. If you want the 2.0 behaviour, you need a version of the script that actually uses its BB setting.</p>
+<h2>What the histogram measures</h2>
+<p>The histogram is not the squeeze. It is a separate momentum line:</p>
+<ol><li>Take the midpoint of the 20-bar highest high and lowest low.</li><li>Average that with the 20-bar simple average of the close.</li><li>Subtract the result from the close.</li><li>Fit a straight line through the last 20 values of that difference and take the line's value at the current bar.</li></ol>
+<p><code>value = linear regression end value over 20 bars of ( close - average( Donchian midline, SMA(close) ) )</code></p>
+<p>In plain terms it is how far price sits above or below its recent middle, smoothed by a regression line. On SPY daily it moved together with the plain 20-bar change in price (correlation 0.90). The colours only say whether it is above or below zero and whether it rose or fell since the last bar: bright green rising above zero, dark green falling above zero, red falling below zero, maroon rising below zero.</p>
+<p>Note that "KC Length" also sets the momentum length. "BB Length" only changes the Bollinger Bands.</p>
+<h2>Does Squeeze Momentum repaint?</h2>
+<p><strong>Not on closed bars.</strong> Every value uses the current and past bars only. There is no higher-timeframe request and no future data.</p>
+<p><strong>The live bar does change</strong> until it closes. A black dot or a colour change you see mid-bar can disappear before the close. If you set an alert on it, set it to trigger once per bar close. The original script has no built-in alerts, so most alert setups people share are custom.</p>
+<h2>Settings, honestly</h2>
+<p>There is no "best" setting. What each one does:</p>
+<ul><li><strong>BB Length (20):</strong> the window of the Bollinger Bands only.</li><li><strong>BB MultFactor (2.0):</strong> unused, see above.</li><li><strong>KC Length (20):</strong> the Keltner window and the momentum window.</li><li><strong>KC MultFactor (1.5):</strong> the width of both the Keltner Channels and the Bollinger Bands.</li><li><strong>Use TrueRange (on):</strong> off uses high minus low, which ignores gaps.</li></ul>
+<p>Shorter lengths react faster and produce more squeezes and more zero-line crosses. Longer lengths do the opposite. Neither tells you which way a squeeze will resolve.</p>
 <h2>Where it fails</h2>
-<ul>
-<li>It sees one number per bar. A day that rallies from the low to close at the high and a day that gaps up and drifts to the same close look identical.</li>
-<li>It sits pinned near the extremes in trends, so fading every reading above 70 fights the trend.</li>
-<li>The value depends slightly on loaded history and on how the first average was seeded.</li>
-<li>Divergence has no single definition (which swing points, how far apart), so two people can call different divergences on the same chart.</li>
-<li>On the live bar the value changes until the close.</li>
-<li>Any edge from a threshold has to be shown out of sample for that instrument and timeframe; it is not a property of the indicator.</li>
-</ul>
-<h2>The Teardown Letter</h2>
-<p>The monthly Teardown Letter takes one popular indicator apart per issue in the same way: what it computes, what follows from the arithmetic, and where it misleads. Issues so far: RSI, MACD, order blocks, Fibonacci and Supertrend. New subscribers get every past issue.</p>
-<p class="also-explained">Also explained: <a href="/repaint-checker">Repaint checker</a>, <a href="/vwap">VWAP</a>, <a href="/supertrend">Supertrend</a>, <a href="/ut-bot-alerts">UT Bot Alerts</a>, <a href="/nadaraya-watson-envelope">Nadaraya-Watson Envelope</a>, <a href="/squeeze-momentum">Squeeze Momentum</a></p>
+<ul><li><strong>A squeeze says volatility is low, not which way it will break.</strong> The dots carry no direction. The histogram's sign at the moment of release is a reading of the last 20 bars, not of the next ones.</li><li><strong>Squeezes can end with no move at all.</strong> Low volatility can simply continue, or price can drift out of the squeeze sideways.</li><li><strong>The count depends on the hidden 1.5.</strong> Comparing squeeze statistics from this script with a TTM-style 2.0 version compares two different rules.</li><li><strong>The histogram lags.</strong> It is built from 20-bar windows, so it confirms moves that are already underway.</li><li><strong>Gaps and thin markets</strong> distort the true-range average and the standard deviation differently, so dot colour can flip on a single unusual bar.</li></ul>
+<h2>Also explained</h2>
+<p><em>Educational content only. Not financial advice. Nothing here is a recommendation to buy or sell anything. Original script by LazyBear on TradingView; this page explains its published source and quotes no code.</em></p>
+<p class="also-explained">Also explained: <a href="/repaint-checker">Repaint checker</a>, <a href="/vwap">VWAP</a>, <a href="/supertrend">Supertrend</a>, <a href="/rsi">RSI</a>, <a href="/ut-bot-alerts">UT Bot Alerts</a>, <a href="/nadaraya-watson-envelope">Nadaraya-Watson Envelope</a></p>
 <section class="tt-signup" aria-labelledby="tt-signup-h">
 <style>
 .tt-signup{margin:40px 0 8px;padding:22px 20px;border:1px solid rgba(91,141,239,.35);border-radius:12px;background:rgba(91,141,239,.06)}
