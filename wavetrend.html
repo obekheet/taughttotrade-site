@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0E1526">
+<meta name="description" content="How LazyBear&#x27;s WaveTrend Oscillator on TradingView actually works: it is a smoothed CCI. The formula, what each setting does, what the 60 and 53 levels mean, and whether it repaints.">
+<link rel="canonical" href="https://taughttotrade.com/wavetrend">
+<title>WaveTrend Oscillator (LazyBear) explained: the formula, settings, levels and repainting | Taught to Trade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0e1526;--paper:#f5f2ea;--blue:#2f6fed;--amber:#e8a13c;--mist:#bdc5d5;--line:rgba(245,242,234,.14);--panel:#141e33;--max:1180px;--mono:"DM Mono",monospace;--sans:Inter,system-ui,sans-serif}*{box-sizing:border-box}html{scroll-behavior:smooth;background:var(--ink)}body{margin:0;min-width:320px;background:var(--ink);background-image:linear-gradient(rgba(47,111,237,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(47,111,237,.045) 1px,transparent 1px);background-size:40px 40px;color:var(--paper);font-family:var(--sans);line-height:1.55}.wrap{width:min(calc(100% - 48px),var(--max));margin:auto}.topbar{border-bottom:1px solid var(--line);background:rgba(14,21,38,.92);backdrop-filter:blur(14px);position:sticky;top:0;z-index:2}.nav{height:76px;display:flex;justify-content:space-between;align-items:center;gap:20px}.brand{font-size:.93rem;font-weight:700;letter-spacing:-.025em;text-decoration:none;color:var(--paper)}.brand span,.eyebrow,.kicker,.label{font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase}.brand span{display:block;margin-top:1px;color:var(--mist);font-size:.57rem;letter-spacing:.09em}.nav-link{color:var(--mist);text-decoration:none;font-size:.85rem}.nav-link:hover{color:var(--paper)}.nav-actions{display:flex;align-items:center;gap:18px}.nav .button{min-height:42px;padding:9px 14px;font-size:.82rem;white-space:nowrap}.hero{padding:clamp(88px,13vw,160px) 0 108px;border-bottom:1px solid var(--line)}.hero-grid{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(280px,.64fr);gap:clamp(48px,9vw,130px);align-items:end}.eyebrow,.kicker{color:#7fa7ff;margin:0 0 22px}h1,h2,h3,p{margin-top:0}h1{max-width:780px;font-size:clamp(3.25rem,7.4vw,6.5rem);line-height:.96;letter-spacing:-.07em;margin:0 0 30px}h2{font-size:clamp(2.15rem,4vw,4rem);line-height:1;letter-spacing:-.055em;margin:0}.hero-copy{max-width:675px;color:var(--mist);font-size:1.1rem;line-height:1.75;margin:0 0 36px}.actions{display:flex;flex-wrap:wrap;gap:12px}.button{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:12px 17px;border:1px solid var(--blue);background:var(--blue);color:white;text-decoration:none;font-weight:600;font-size:.9rem;transition:.16s ease}.button:hover{transform:translateY(-2px);background:#3e7af0}.button.secondary{background:transparent;color:var(--paper)}.button.secondary:hover{background:rgba(47,111,237,.12)}.hero-note{position:relative;padding:29px;border:1px solid rgba(47,111,237,.48);background:linear-gradient(145deg,rgba(47,111,237,.1),rgba(20,30,51,.65));min-height:294px}.hero-note:before{content:"";position:absolute;inset:13px;border:1px solid rgba(245,242,234,.11);pointer-events:none}.note-title{position:relative;color:#8bb0ff;margin:0 0 28px;font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase}.principle{position:relative;border-top:1px solid var(--line);padding:15px 0 0;margin-top:15px}.principle b{display:block;font-size:.94rem}.principle small{color:var(--mist);font-size:.78rem}.section{padding:clamp(82px,11vw,132px) 0;border-bottom:1px solid var(--line)}.section-head{display:grid;grid-template-columns:.73fr 1fr;gap:55px;align-items:start;margin-bottom:54px}.section-head p{color:var(--mist);font-size:1rem;line-height:1.75;margin:0}.two-col{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line);border-left:1px solid var(--line)}.logic{padding:32px;min-height:326px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}.logic h3{font-family:var(--mono);font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;margin:0 0 22px}.logic.is h3{color:#8bb0ff}.logic.isnt h3{color:#e4b36c}.logic ul{padding:0;margin:0;list-style:none}.logic li{padding:13px 0;border-top:1px solid var(--line);color:var(--mist);font-size:.94rem}.logic li:first-child{border:0;padding-top:0}.logic strong{color:var(--paper)}.script-intro{margin-bottom:26px}.script-intro h2{margin-bottom:14px}.script-intro p{color:var(--mist);margin:0}.group-title{display:flex;align-items:center;gap:14px;margin:52px 0 14px;font-family:var(--mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#8bb0ff}.group-title:after{content:"";height:1px;flex:1;background:var(--line)}.group-title .coming{color:var(--amber);border:1px solid rgba(232,161,60,.55);padding:4px 7px}.script-list{border-top:1px solid var(--line)}.script{display:grid;grid-template-columns:1.05fr 1.55fr .5fr;gap:30px;align-items:center;padding:28px 0;border-bottom:1px solid var(--line)}.script h3{font-size:1.12rem;letter-spacing:-.025em;margin:0 0 4px}.script .tag{font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;color:#8bb0ff;text-transform:uppercase}.script p{color:var(--mist);font-size:.9rem;line-height:1.62;margin:0}.script a{justify-self:end;color:var(--paper);font-size:.87rem;font-weight:600;text-decoration:none;border-bottom:1px solid var(--blue);padding-bottom:3px;white-space:nowrap}.script a:hover{color:#8bb0ff}.suite{padding:32px;border:1px solid var(--line);background:rgba(20,30,51,.67)}.suite-meta{display:flex;justify-content:space-between;gap:20px;color:var(--mist);font-size:.88rem;margin-bottom:22px}.suite-meta strong{color:var(--paper)}.suite-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}.suite-item{padding-top:18px;border-top:1px solid var(--line)}.suite-item h3{font-size:1rem;margin:0 0 8px}.suite-item p{color:var(--mist);font-size:.88rem;line-height:1.6;margin:0}.suite .button{margin-top:27px;background:transparent}.tools{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.card{display:flex;flex-direction:column;min-height:280px;padding:29px;border:1px solid var(--line);background:rgba(20,30,51,.65)}.card .label{color:#8bb0ff;margin:0 0 24px}.card h3{font-size:1.5rem;letter-spacing:-.04em;margin:0 0 13px}.card p{color:var(--mist);font-size:.94rem;margin:0 0 26px}.card .button{margin-top:auto;align-self:start;background:transparent}.card .price{color:var(--paper);font-family:var(--mono);font-size:.88rem;margin-bottom:14px}.purchase-note{color:var(--mist);font-size:.78rem;margin-top:12px}.audience{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);border-left:1px solid var(--line)}.persona{padding:25px;min-height:230px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}.persona .num{font-family:var(--mono);color:#8bb0ff;font-size:.7rem}.persona h3{font-size:1.08rem;margin:31px 0 9px}.persona p{color:var(--mist);font-size:.88rem;line-height:1.65;margin:0}.lead{background:linear-gradient(112deg,rgba(232,161,60,.14),rgba(20,30,51,.74) 52%);border-bottom:1px solid rgba(232,161,60,.42)}.lead-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:55px;align-items:end}.lead .kicker{color:#f0ba65}.lead h2{max-width:680px;margin-bottom:20px}.lead p{max-width:670px;color:var(--mist);font-size:1.03rem;margin:0}.lead .button{justify-self:end;background:var(--amber);border-color:var(--amber);color:var(--ink)}.lead .button:hover{background:#f0b65f}footer{padding:58px 0 72px;background:rgba(5,10,21,.38)}.foot{display:flex;justify-content:space-between;gap:30px;align-items:start}.legal{max-width:710px;color:#8f9bb0;font-size:.78rem;line-height:1.7;margin:0}.foot-links{display:flex;gap:18px;white-space:nowrap}.foot-links a{color:var(--paper);font-size:.83rem;text-decoration:none;border-bottom:1px solid rgba(245,242,234,.35)}@media(max-width:800px){.wrap{width:min(calc(100% - 34px),var(--max))}.hero-grid,.section-head,.lead-grid{grid-template-columns:1fr}.hero-note{max-width:450px}.section-head{gap:24px}.script{grid-template-columns:1fr;gap:11px}.script a{justify-self:start}.suite-grid,.tools{grid-template-columns:1fr}.audience{grid-template-columns:1fr 1fr}.lead .button{justify-self:start}.foot{flex-direction:column}.nav-link{display:none}}@media(max-width:520px){.nav{height:66px;gap:12px}.nav .button{padding:9px 12px;font-size:.78rem}.hero{padding:78px 0}.hero-copy{font-size:1rem}.actions,.actions .button{width:100%}.two-col,.audience{grid-template-columns:1fr}.logic{min-height:0}.section{padding:76px 0}.suite{padding:24px}.suite-meta{flex-direction:column}.lead-grid{gap:30px}.foot-links{flex-wrap:wrap}}
+</style>
+<style>
+.article-page{padding:clamp(76px,10vw,126px) 0;border-bottom:1px solid var(--line)}
+.article{width:min(calc(100% - 48px),800px);margin:auto}
+.article h1{max-width:none;font-size:clamp(2.8rem,6vw,5.25rem);line-height:1.01;letter-spacing:-.065em;margin:0 0 38px}
+.article h2{font-size:clamp(1.55rem,3.2vw,2.35rem);line-height:1.12;letter-spacing:-.045em;margin:64px 0 20px}
+.article p,.article li{color:var(--mist);font-size:1.03rem;line-height:1.8}
+.article p{margin:0 0 24px}
+.article ul{margin:0 0 30px;padding-left:1.4rem}
+.article li{margin:0 0 10px;padding-left:4px}
+.article pre{margin:25px 0 30px;padding:20px 22px;overflow-x:auto;border:1px solid rgba(47,111,237,.48);background:rgba(20,30,51,.72);color:var(--paper);font:500 .94rem/1.65 var(--mono);white-space:pre-wrap}
+.article code{font-family:var(--mono)}
+.article .disclaimer{margin-top:46px;color:#8f9bb0;font-size:.88rem}
+.article-actions{display:flex;flex-wrap:wrap;align-items:center;gap:18px;margin-top:34px}
+.article-actions .back{color:var(--paper);font-size:.87rem;font-weight:600;text-decoration:none;border-bottom:1px solid var(--blue);padding-bottom:3px}
+.article-actions .back:hover{color:#8bb0ff}
+@media(max-width:520px){.article{width:min(calc(100% - 34px),800px)}.article-page{padding:64px 0}.article h1{font-size:2.65rem}.article h2{margin-top:52px}.article-actions,.article-actions .button{width:100%}.article-actions .back{width:auto}}
+</style>
+<style>
+.article .also-explained{margin-top:46px;padding-top:24px;border-top:1px solid var(--line)}
+.article .also-explained a{color:var(--paper);text-decoration:none;border-bottom:1px solid var(--blue);padding-bottom:2px}
+.article .also-explained a:hover{color:#8bb0ff}
+</style>
+</head>
+<body>
+<header class="topbar"><div class="wrap nav"><a class="brand" href="https://taughttotrade.com/">Taught to Trade<span>Systems over signals.</span></a><nav class="nav-actions" aria-label="Primary"><a class="nav-link" href="https://taughttotrade.com/#scripts">Scripts</a><a class="nav-link" href="https://taughttotrade.com/#letter">Letter</a><a class="nav-link" href="https://taughttotrade.com/#tools">Tools</a><a class="button" href="https://taughttotrade.gumroad.com/l/otnor" target="_blank" rel="noopener">Subscribe $19/mo</a></nav></div></header>
+<main id="top" class="article-page"><article class="article">
+<h1>WaveTrend Oscillator, explained from its source</h1>
+<p>LazyBear's WaveTrend Oscillator is one of the most-boosted free indicators on TradingView, and dozens of popular scripts are built on top of it. It draws two wavy lines between overbought and oversold bands, and people trade the crosses. This page explains it from the published source code. The short version: <strong>WaveTrend is, in effect, a smoothed Commodity Channel Index.</strong></p>
+<h2>The formula</h2>
+<p>Everything starts from the typical price, the average of high, low and close.</p>
+<ol><li>Take a 10-bar EMA of the typical price.</li><li>Measure how far price is from that EMA, and take a 10-bar EMA of that distance (always positive).</li><li>Divide the first gap by 0.015 times the average distance.</li><li>Smooth the result with a 21-bar EMA. That is the main line (WT1).</li><li>Take a 4-bar simple average of WT1. That is the signal line (WT2).</li></ol>
+<p><code>ci = (hlc3 - EMA10) / (0.015 x EMA10 of |hlc3 - EMA10|)</code>, then <code>WT1 = EMA21(ci)</code> and <code>WT2 = SMA4(WT1)</code></p>
+<p>The shaded area is the gap between the two lines, WT1 minus WT2.</p>
+<h2>Why it is really a CCI</h2>
+<p>The Commodity Channel Index is the typical price minus its average, divided by 0.015 times the average deviation. Step 3 above is the same calculation with exponential averages in place of simple ones, and the same 0.015 constant. WaveTrend then smooths that CCI-like value with a 21-bar EMA.</p>
+<p>Two things follow:</p>
+<ul><li><strong>It reacts like a slow CCI.</strong> If you already use CCI, WaveTrend will mostly tell you the same story, later and smoother.</li><li><strong>It is scaled by volatility.</strong> Because it divides by the average deviation, a quiet market and a wild one produce lines of the same size. That is why one set of levels works on any chart, and also why those levels say nothing about how far price has moved in money terms.</li></ul>
+<h2>What the 60 and 53 levels mean</h2>
+<p>They are fixed lines the author chose, not a statistic of your chart. Because the value is scaled by volatility, the line reaches them often, even when nothing is happening.</p>
+<p>In a simulation on pure random-walk prices (200,000 bars, nothing to predict), the main line spent about <strong>1 bar in 9 beyond plus or minus 60</strong>, and about <strong>1 in 5 beyond plus or minus 53</strong>. Making the simulated volatility jump between calm and wild periods barely changed those numbers.</p>
+<p>So "overbought" on WaveTrend means "recent prices are high relative to their own recent average and wiggle", not "price is about to fall". Treat a reading beyond 60 as common, not rare.</p>
+<h2>The crosses</h2>
+<p>The "WaveTrend with Crosses" version marks every point where the two lines cross. In the same random-walk simulation the lines crossed about <strong>once every 7 bars</strong>, and roughly 1 cross in 7 happened beyond the 60 levels. A cross is a 4-bar average catching up with the line it averages. It happens constantly by construction, so any filter you add matters far more than the cross itself.</p>
+<h2>Does WaveTrend repaint?</h2>
+<p><strong>Not on closed bars.</strong> It uses only the current and past bars: no higher-timeframe request, no future data, no offset.</p>
+<p><strong>The live bar does change.</strong> Until the bar closes, the typical price moves with every tick, so both lines move and a cross can appear and then vanish. The "with Crosses" version draws its circles and bar colours with no check for a closed bar, so a marker you see mid-bar may not be there at the close. For the full picture see <a href="/repainting">what repainting is</a>, or paste a script into the <a href="/repaint-checker">repaint checker</a>.</p>
+<h2>Settings, honestly</h2>
+<ul><li><strong>Channel Length (10):</strong> the EMA used for the centre line and for the average distance. Shorter makes the raw CCI jumpier.</li><li><strong>Average Length (21):</strong> the smoothing of the main line. This is the main lag control. Longer means smoother lines, fewer crosses and later turns.</li><li><strong>The 4-bar signal line</strong> is fixed in the original; it is not an input.</li><li><strong>Levels (60, 53, -53, -60):</strong> drawing only. Changing them does not change the lines, just where you decide "extreme" starts.</li></ul>
+<p>There is no best setting. A shorter average gives earlier turns and more false crosses; a longer one gives fewer crosses and more lag. That trade-off does not go away.</p>
+<h2>WaveTrend vs RSI</h2>
+<p>RSI compares average up-moves with average down-moves and is bounded between 0 and 100. WaveTrend measures distance from an average, scaled by volatility, and has no fixed bounds. Both are momentum oscillators built from smoothed price changes, so on most charts they turn at similar times. See <a href="/rsi">the RSI explainer</a>.</p>
+<h2>Where it fails</h2>
+<ul><li><strong>Trends.</strong> In a strong trend the line can sit beyond 60 for a long time. "Overbought" is not a reason for a trend to end.</li><li><strong>Noise.</strong> Crosses happen about every 7 bars even on random data. Most of them mean nothing.</li><li><strong>Lag.</strong> Three layers of averaging (10, 21 and 4 bars) mean turns show up after price has already turned.</li><li><strong>The live bar.</strong> Crosses and bar colours can appear and disappear before the bar closes.</li><li><strong>It is a description, not a forecast.</strong> It tells you where price sits relative to its own recent average. It does not tell you what happens next.</li></ul>
+<h2>Also explained</h2>
+<p><em>Educational content only. Not financial advice. Nothing here is a recommendation to buy or sell anything. Original script by LazyBear on TradingView; this page explains its published source and quotes no code.</em></p>
+<p class="also-explained">Also explained: <a href="/repaint-checker">Repaint checker</a>, <a href="/vwap">VWAP</a>, <a href="/supertrend">Supertrend</a>, <a href="/rsi">RSI</a>, <a href="/ut-bot-alerts">UT Bot Alerts</a>, <a href="/nadaraya-watson-envelope">Nadaraya-Watson Envelope</a>, <a href="/squeeze-momentum">Squeeze Momentum</a>, <a href="/repainting">What is repainting on TradingView?</a>, <a href="/tradingview-backtest-accuracy">Is TradingView backtesting accurate?</a>, <a href="/chandelier-exit">Chandelier Exit</a></p>
+<section class="tt-signup" aria-labelledby="tt-signup-h">
+<style>
+.tt-signup{margin:40px 0 8px;padding:22px 20px;border:1px solid rgba(91,141,239,.35);border-radius:12px;background:rgba(91,141,239,.06)}
+.tt-signup h2{margin:0 0 8px;font-size:1.25rem}
+.tt-signup p{margin:0 0 12px}
+.tt-signup-form{display:flex;gap:8px;flex-wrap:wrap}
+.tt-signup-form input{flex:1 1 220px;min-height:44px;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.25);color:inherit;font:inherit}
+.tt-signup-form button{min-height:44px;padding:10px 18px;border:0;border-radius:8px;background:#2F6FED;color:#fff;font:inherit;font-weight:600;cursor:pointer}
+.tt-signup-note{font-size:.85rem;opacity:.75;margin-top:10px}
+.tt-signup a{color:#8fb0ff}
+.tt-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+<h2 id="tt-signup-h">Get the next teardown by email</h2>
+<p>One short email when a new teardown or free tool goes live, about twice a month. No signals, no hype. Unsubscribe in one click.</p>
+<form class="tt-signup-form" action="https://app.kit.com/forms/10025491/subscriptions" method="post">
+<label class="tt-sr" for="tt-email">Email address</label>
+<input id="tt-email" type="email" name="email_address" required autocomplete="email" placeholder="you@example.com">
+<button type="submit">Sign up free</button>
+</form>
+<p class="tt-signup-done" hidden>Almost done. Check your inbox and click the confirmation link.</p>
+<p class="tt-signup-note">Sent with Kit. Your address is used only for these emails. <a href="/privacy">Privacy</a></p>
+<script>
+(function(){var s=document.currentScript.parentNode,f=s.querySelector('form'),d=s.querySelector('.tt-signup-done');
+f.addEventListener('submit',function(e){e.preventDefault();var b=f.querySelector('button');b.disabled=true;
+fetch(f.action,{method:'POST',body:new FormData(f),mode:'no-cors'}).then(function(){f.hidden=true;d.hidden=false;}).catch(function(){f.submit();});});})();
+</script>
+</section>
+<div class="article-actions"><a class="button" href="https://taughttotrade.gumroad.com/l/otnor" target="_blank" rel="noopener">Subscribe to the Teardown Letter: $19/mo</a><a class="back" href="https://taughttotrade.com/">Back to Taught to Trade</a></div>
+</article></main>
+<footer><div class="wrap foot"><p class="legal">Educational tools only—not investment advice. Trading involves substantial risk of loss. No performance claims. You set your own alerts; nothing here sends buy/sell signals.</p><div class="foot-links"><a href="https://www.tradingview.com/u/taughttotrade/" target="_blank" rel="noopener">TradingView</a><a href="https://taughttotrade.gumroad.com/" target="_blank" rel="noopener">Gumroad</a></div></div></footer>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "e0f6d58dfdf749eb83ae8e75100eb65c"}'></script><!-- End Cloudflare Web Analytics -->
+</body>
+</html>
