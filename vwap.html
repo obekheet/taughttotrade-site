@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0E1526">
-<meta name="description" content="VWAP is a running volume-weighted average since the anchor. The one formula that explains why it chases price in the morning and goes flat in the afternoon, and where it fails.">
+<meta name="description" content="VWAP is a running volume-weighted average since the anchor. Why two charts show different VWAPs, whether it repaints, and where it fails.">
 <link rel="canonical" href="https://taughttotrade.com/vwap">
-<title>What VWAP actually computes, and why it barely moves after lunch | Taught to Trade</title>
+<title>What VWAP computes, why yours differs, and why it flattens after lunch | Taught to Trade</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -46,6 +46,17 @@
 <pre><code>change = v / (V + v) x (p - W)</code></pre>
 <p>The first factor is the new bar's share of all volume since the anchor. Early in the session V is small, so each bar is a large share and VWAP follows price. Late in the session a bar that is 1% of the volume so far, trading two dollars away, moves VWAP two cents. A session VWAP gets harder to move as the day goes on, because the volume it divides by only grows; a very heavy bar near the close can still nudge it.</p>
 <p>That matters when you read "touches". A nearly flat line that price oscillates around will be touched many times, whatever the volume weighting does. An afternoon chart that seems to "respect VWAP" is not, on its own, evidence that the line is a level.</p>
+<h2>Why your VWAP differs from someone else's</h2>
+<p>Two charts of the same symbol, on the same day, can show different VWAPs without anyone having made a mistake. The usual causes, in rough order of size:</p>
+<ul>
+<li><strong>Where the sums start.</strong> If one chart includes extended hours and the other does not, one VWAP has been averaging pre-market trades since early morning and the other starts at the open. The same goes for the anchor setting: Session, Week and Month VWAPs are different averages.</li>
+<li><strong>The volume feed.</strong> An exchange-specific symbol carries only that venue's volume; a consolidated feed carries all of it. Different volume means different weights, which means a different average.</li>
+<li><strong>The timeframe.</strong> Each bar contributes its typical price, (high + low + close) / 3, times its volume. A 15-minute bar's typical price is not the volume-weighted average of the fifteen 1-minute bars inside it, so a 1-minute VWAP and a 15-minute VWAP drift apart, usually by cents.</li>
+<li><strong>The price source.</strong> Some platforms use the close, or (open + high + low + close) / 4, instead of the typical price. A broker's execution VWAP is computed from every individual trade, not from bars at all.</li>
+</ul>
+<p>None of these is "the right one". Each is an exact answer to a slightly different question. When two VWAPs disagree, check those four settings before reading anything into the gap.</p>
+<h2>Does VWAP repaint?</h2>
+<p>Not on closed bars. Once a bar has closed, the VWAP up to that bar is fixed. On the live bar it moves with every trade until the close, and so do the bands. Anchored VWAP does not repaint either, but the anchor is chosen by a person, usually after seeing what happened, which is why anchored VWAP examples tend to look better in hindsight than in real time.</p>
 <h2>Where it fails</h2>
 <ul>
 <li>Late in the session it barely moves, so touches and crosses become likely by construction.</li>
@@ -53,6 +64,7 @@
 <li>Anchored VWAP is usually anchored with hindsight in the examples you see.</li>
 <li>It is only as good as the volume feed, and on some symbols that is not total traded size.</li>
 <li>It says nothing about the future. It is an average of what has already traded.</li>
+<li>Two charts can disagree on VWAP for mechanical reasons (session, timeframe, volume feed) before anyone has an opinion.</li>
 </ul>
 <h2>The Teardown Letter</h2>
 <p>The monthly Teardown Letter takes one popular indicator apart per issue in the same way: what it computes, what follows from the arithmetic, and where it misleads. Issues so far: RSI, MACD, order blocks, Fibonacci and Supertrend. New subscribers get every past issue.</p>
