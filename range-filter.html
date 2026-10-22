@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0E1526">
+<meta name="description" content="How the Range Filter Buy and Sell 5min indicator on TradingView works, from its published source: a price line that only moves when price leaves a band, why the labels need a 2x range move from the last extreme, what 100 / 3 vs the original 14 / 2.618 changes, and where it fails.">
+<link rel="canonical" href="https://taughttotrade.com/range-filter">
+<title>Range Filter explained: what the line and the Buy/Sell labels really are, the 5min settings, and where it fails | Taught to Trade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>:root{--ink:#0e1526;--ink-2:#0a0f1c;--panel:#141e33;--paper:#f5f2ea;--mist:#bdc5d5;--dim:#8b95a8;--blue:#2f6fed;--blue-soft:#8fb0ff;--amber:#e8a13c;--line:rgba(245,242,234,.12);--line-strong:rgba(245,242,234,.28);--max:1180px;--sans:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;--mono:"DM Mono",ui-monospace,Consolas,monospace;color-scheme:dark}
+*{box-sizing:border-box}html{scroll-behavior:smooth;background:var(--ink)}
+body{margin:0;background:var(--ink);color:var(--paper);font:16px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:inherit}a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+h1,h2,h3{font-weight:300;letter-spacing:-.025em;text-wrap:balance}
+.wrap{width:100%;max-width:calc(var(--max) + 64px);margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+@media(min-width:768px){.wrap{padding-left:32px;padding-right:32px}}
+.kicker,.nav a,.btn,.button,.textlink{font-family:var(--mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase}
+.kicker{color:var(--dim);margin:0 0 18px}.kicker a{color:var(--dim);text-decoration:none;border-bottom:1px solid var(--line-strong)}.kicker a:hover{color:var(--paper)}
+.announce{margin:0;border-bottom:1px solid var(--line);text-align:center;font:500 .72rem/1.4 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mist);padding:10px 16px}
+.topbar{position:sticky;top:0;z-index:5;background:rgba(14,21,38,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:64px}
+.brand{text-decoration:none;font-weight:600;letter-spacing:-.01em;line-height:1.1}
+.brand small{display:block;font:400 .66rem/1.4 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.nav{display:flex;align-items:center;gap:22px}.nav a{text-decoration:none;color:var(--mist)}.nav a:hover{color:var(--paper)}
+@media(max-width:700px){.nav a:not(.btn){display:none}}
+.btn,.button{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:46px;padding:0 20px;border:1px solid var(--line-strong);border-radius:2px;text-decoration:none;color:var(--paper);background:transparent;cursor:pointer;text-align:center}
+.btn:hover,.button:hover{border-color:var(--paper)}
+.btn.primary,.button:not(.secondary){background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.primary:hover,.button:not(.secondary):hover{background:#3f7cf5}
+.textlink{color:var(--paper);text-decoration:none;border-bottom:1px solid var(--line-strong);padding-bottom:3px;white-space:nowrap}.textlink:hover{border-color:var(--paper)}
+.ticks{height:16px;border-bottom:1px solid var(--line-strong);background:repeating-linear-gradient(90deg,var(--line-strong) 0 1px,transparent 1px 100%) left bottom/calc(100% / 12) 14px repeat-x,repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px 100%) left bottom/calc(100% / 60) 6px repeat-x}
+footer{background:var(--ink-2);border-top:1px solid var(--line);padding-block:56px 32px}
+.foot-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:16px;margin-bottom:22px}
+.foot-top .tag{margin:0;font-size:clamp(1.4rem,1.1rem + 1.2vw,2.2rem);font-weight:300;letter-spacing:-.02em}.foot-top .tag em{font-style:normal;color:var(--blue-soft)}
+.cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px 20px;padding-block:34px}
+@media(min-width:900px){.cols{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.cols h3{font:500 .72rem/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin:0 0 14px}
+.cols ul{list-style:none;margin:0;padding:0;display:grid;gap:9px}.cols a{text-decoration:none;color:var(--mist);font-size:.94rem}.cols a:hover{color:var(--paper)}
+.legal{border-top:1px solid var(--line);padding-top:22px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;font:400 .72rem/1.6 var(--mono);color:var(--dim)}.legal p{margin:0;max-width:80ch}
+@media(max-width:640px){.hide-sm{display:none}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}</style>
+<style>
+.article-page{padding-block:clamp(56px,8vw,104px)}
+.article{width:100%;max-width:calc(720px + 2 * 16px);margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.article h1{font-size:clamp(2.4rem,1.7rem + 3vw,4.2rem);line-height:1.04;margin:0 0 34px}
+.article h2{font-size:clamp(1.5rem,1.25rem + 1vw,2.1rem);line-height:1.15;margin:64px 0 18px;padding-top:22px;border-top:1px solid var(--line)}
+.article h3{font-size:1.3rem;margin:36px 0 12px}
+.article p,.article li{color:var(--mist);font-size:1.03rem;line-height:1.8}
+.article p{margin:0 0 22px}.article strong{color:var(--paper);font-weight:600}
+.article a{color:var(--blue-soft)}
+.article ul,.article ol{margin:0 0 28px;padding-left:1.3rem}.article li{margin:0 0 10px;padding-left:4px}
+.article pre{margin:24px 0 30px;padding:18px 20px;overflow-x:auto;border:1px solid var(--line);background:var(--panel);color:var(--paper);font:400 .9rem/1.7 var(--mono);white-space:pre-wrap}
+.article code{font-family:var(--mono);font-size:.92em}
+.article .table-wrap{overflow-x:auto;margin:24px 0 30px}
+.article table{width:100%;border-collapse:collapse;font-size:.94rem}
+.article th,.article td{text-align:left;padding:11px 12px 11px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--mist)}
+.article thead th{font:500 .72rem/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim);border-bottom-color:var(--line-strong)}
+.article .disclaimer{margin-top:46px;color:var(--dim);font-size:.88rem}
+.article-actions{display:flex;flex-wrap:wrap;align-items:center;gap:18px;margin-top:34px}
+.article-actions .back{font-family:var(--mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);text-decoration:none;border-bottom:1px solid var(--line-strong);padding-bottom:3px}
+.article-actions .back:hover{border-color:var(--paper)}
+@media(max-width:520px){.article h2{margin-top:52px}.article-actions .button{width:100%}}
+</style>
+<style>
+.article .also-explained{margin-top:46px;padding-top:24px;border-top:1px solid var(--line)}
+.article .also-explained a{color:var(--paper);text-decoration:none;border-bottom:1px solid var(--blue);padding-bottom:2px}
+.article .also-explained a:hover{color:#8bb0ff}
+</style>
+</head>
+<body>
+<p class="announce"><span class="hide-sm">Free: </span>indicator teardowns, a repaint checker and open-source scripts.<span class="hide-sm"> No buy/sell signals, ever.</span></p>
+<header class="topbar"><div class="wrap"><a class="brand" href="https://taughttotrade.com/">Taught to Trade<small>Systems over signals.</small></a><nav class="nav" aria-label="Primary"><a href="https://taughttotrade.com/#explainers">Explainers</a><a href="https://taughttotrade.com/#scripts">Scripts</a><a href="https://taughttotrade.com/#prices">Prices</a><a class="btn primary" href="https://taughttotrade.gumroad.com/l/otnor" target="_blank" rel="noopener">Subscribe $19/mo</a></nav></div></header>
+<main id="top" class="article-page"><article class="article">
+<p class="kicker"><a href="https://taughttotrade.com/#explainers">Explainers</a> / Range Filter</p>
+<h1>Range Filter, explained from the source</h1>
+<p>"Range Filter Buy and Sell 5min" (the guikroth version of DonovanWall's Range Filter) is one of the most-boosted trend scripts on TradingView, and VuManChu Swing Free and Twin Range Filter are built on the same idea. It draws a line that steps along with price, two target bands, coloured candles and Buy/Sell labels. This page explains, from the published source, what each of those is. The short version: <strong>the line is a ratchet that ignores any move smaller than one "range", and a label appears only after price has come back at least two ranges from its last extreme close.</strong></p>
+<h2>The range: an average bar move, smoothed and multiplied</h2>
+<p>The script first measures how much price usually moves per bar: the average of the absolute bar-to-bar change of the source (close by default) over the Sampling Period (100). It then smooths that average again over twice the period minus one (199 bars) and multiplies it by the Range Multiplier (3). Call the result <strong>r</strong>. With the defaults, r is about three times a typical bar's move, and because of the double smoothing it changes slowly.</p>
+<h2>The line: a ratchet that ignores small moves</h2>
+<p>The filter line follows one rule each bar:</p>
+<ul><li>If price is above the line and more than r above it, the line jumps up to <strong>price minus r</strong>. Otherwise it stays where it is.</li><li>If price is below the line and more than r below it, the line drops to <strong>price plus r</strong>. Otherwise it stays where it is.</li></ul>
+<p>So the line never moves on a small wiggle. In our simulation it stayed perfectly flat on about three bars in four. When it does move, it trails price at a distance of exactly r. The two "target" bands are simply the line plus r and the line minus r: they mark the prices a close must pass to move the line at all.</p>
+<h2>The labels: a 2 x range turn on closes</h2>
+<p>The script counts how many times in a row the line has stepped up or down. A <strong>Buy</strong> label prints on the first bar where the line steps up after it last stepped down, and a <strong>Sell</strong> label on the reverse. (The two-part conditions in the code, "price above the line and rising, or above the line and falling", reduce to "price above the line, the line's last step was up, and the close changed".)</p>
+<p>That makes the turn point easy to compute. After a rise, the line sits r below the highest close. It can only step down when a close falls more than r below the line, which means <strong>at least 2 r below the highest close</strong> (measured with today's r; the range drifts slowly). The label is a trailing stop of two ranges on closes, with a label instead of an exit. In the simulation, the move from the last extreme close to the label was about 2 r or more in nine cases out of ten (median 2.2 r; slightly less only when the range itself had shrunk in the meantime), and the label came a median of about 10 bars after that extreme.</p>
+<h2>Does it repaint?</h2>
+<p>On closed bars, no: the line, the colours and the labels use only the current and past closes, so a finished bar does not change. On the bar that is still forming, the close is the live price, so a label can appear mid-bar and vanish before the close. An alert set to "once per bar" can fire on a label that is not on the chart afterwards; use "once per bar close" if you only want closed-bar labels. More on this in <a href="/repainting">what repainting is</a>, or test a script with the <a href="/repaint-checker">repaint checker</a>.</p>
+<h2>"5min" settings vs the original</h2>
+<p>The guikroth version's defaults (Sampling Period 100, Multiplier 3.0) are labelled in the code as settings "for 5min chart, BTCUSDC", with a note to change them for other coins. They are not tuned for anything else, and the script contains no test of them. DonovanWall's original uses a much shorter period (14), lighter smoothing (27) and a 2.618 multiplier, and adds options: ATR, standard deviation, points, pips or % of price for the range; wicks instead of closes; a second filter type that moves in whole steps of r; and averaging of the filter's changes.</p>
+<p>In the simulation the two defaults behaved alike: a label every 35 bars (guikroth) vs every 28 bars (original), with 3-6% undone within 5 bars. The bigger difference is speed of adapting: the 199-bar smoothing means the guikroth range takes a long time to catch up after volatility changes, so the same r can be too tight after a quiet spell turns busy, and too wide after a busy spell calms down.</p>
+<h2>Settings, honestly</h2>
+<ul><li><strong>Source (close):</strong> what the filter follows.</li><li><strong>Sampling Period (100):</strong> how many bars the average move is taken over; the smoothing length is set from it (2 x period - 1).</li><li><strong>Range Multiplier (3.0):</strong> the width r in typical bar moves. The label needs a 2 r turn, so doubling the multiplier doubles the move it waits for.</li><li>There is no setting that gives earlier labels without more labels that reverse.</li></ul>
+<p>The code also includes a commented-out strategy block with a fixed 400-pip target and 100-pip stop. Those numbers are an example in a comment, not tested values.</p>
+<h2>Where it fails</h2>
+<ul><li><strong>The label is a trailing stop, not a forecast.</strong> It prints only after price has already come back at least two ranges from its extreme close, about 10 bars later in our simulation.</li><li><strong>It labels noise too.</strong> On random-walk prices with nothing to predict it still printed a label about every 28-35 bars.</li><li><strong>Flat line, slow range.</strong> The line ignores moves smaller than r, and r adapts slowly (199-bar smoothing at the defaults), so after a volatility change the filter is either too jumpy or too slow until the average catches up.</li><li><strong>Open-bar labels.</strong> A label on the bar still forming can disappear before the close; set alerts to bar close if that matters.</li><li><strong>"Buy" and "Sell" are names, not results.</strong> The script contains no test of what happened after its labels, and the 5min settings are the author's starting point for one coin pair.</li><li><strong>Back-tested labels look cleaner than they traded.</strong> On a finished chart every label sits near a turn; live, each one came after the move it is named for.</li></ul>
+<p><strong>Also explained:</strong> <a href="/supertrend">Supertrend</a> · <a href="/chandelier-exit">Chandelier Exit</a> · <a href="/ut-bot-alerts">UT Bot Alerts</a> · <a href="/repainting">Repainting</a></p>
+<p><em>Educational only. Not financial advice. Nothing here is a recommendation to buy or sell anything. Range Filter is by DonovanWall, and the Buy and Sell 5min version is by guikroth, on TradingView; this page explains their published open-source code and is not affiliated with either author.</em></p>
+<p class="also-explained">Also explained: <a href="/repaint-checker">Repaint checker</a>, <a href="/vwap">VWAP</a>, <a href="/supertrend">Supertrend</a>, <a href="/rsi">RSI</a>, <a href="/ut-bot-alerts">UT Bot Alerts</a>, <a href="/nadaraya-watson-envelope">Nadaraya-Watson Envelope</a>, <a href="/squeeze-momentum">Squeeze Momentum</a>, <a href="/repainting">What is repainting on TradingView?</a>, <a href="/tradingview-backtest-accuracy">Is TradingView backtesting accurate?</a>, <a href="/chandelier-exit">Chandelier Exit</a>, <a href="/wavetrend">WaveTrend Oscillator</a>, <a href="/qqe-mod">QQE MOD</a>, <a href="/pivot-points-high-low">Pivot highs and lows</a>, <a href="/hull-suite">Hull Suite</a></p>
+<section class="tt-signup" aria-labelledby="tt-signup-h">
+<style>
+.tt-signup{margin:40px 0 8px;padding:22px 20px;border:1px solid rgba(91,141,239,.35);border-radius:12px;background:rgba(91,141,239,.06)}
+.tt-signup h2{margin:0 0 8px;font-size:1.25rem}
+.tt-signup p{margin:0 0 12px}
+.tt-signup-form{display:flex;gap:8px;flex-wrap:wrap}
+.tt-signup-form input{flex:1 1 220px;min-height:44px;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.25);color:inherit;font:inherit}
+.tt-signup-form button{min-height:44px;padding:10px 18px;border:0;border-radius:8px;background:#2F6FED;color:#fff;font:inherit;font-weight:600;cursor:pointer}
+.tt-signup-note{font-size:.85rem;opacity:.75;margin-top:10px}
+.tt-signup a{color:#8fb0ff}
+.tt-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+<h2 id="tt-signup-h">Get the next teardown by email</h2>
+<p>One short email when a new teardown or free tool goes live, about twice a month. No signals, no hype. Unsubscribe in one click.</p>
+<form class="tt-signup-form" action="https://app.kit.com/forms/10025491/subscriptions" method="post">
+<label class="tt-sr" for="tt-email">Email address</label>
+<input id="tt-email" type="email" name="email_address" required autocomplete="email" placeholder="you@example.com">
+<button type="submit">Sign up free</button>
+</form>
+<p class="tt-signup-done" hidden>Almost done. Check your inbox and click the confirmation link.</p>
+<p class="tt-signup-note">Sent with Kit. Your address is used only for these emails. <a href="/privacy">Privacy</a></p>
+<script>
+(function(){var s=document.currentScript.parentNode,f=s.querySelector('form'),d=s.querySelector('.tt-signup-done');
+f.addEventListener('submit',function(e){e.preventDefault();var b=f.querySelector('button');b.disabled=true;
+fetch(f.action,{method:'POST',body:new FormData(f),mode:'no-cors'}).then(function(){f.hidden=true;d.hidden=false;}).catch(function(){f.submit();});});})();
+</script>
+</section>
+<div class="article-actions"><a class="button" href="https://taughttotrade.gumroad.com/l/otnor" target="_blank" rel="noopener">Subscribe to the Teardown Letter: $19/mo</a><a class="back" href="https://taughttotrade.com/">Back to Taught to Trade</a></div>
+</article></main>
+<footer><div class="wrap">
+<div class="foot-top"><a class="brand" href="https://taughttotrade.com/">Taught to Trade<small>Systems over signals.</small></a><p class="tag">The machine shop, <em>not the treasure map.</em></p></div>
+<div class="ticks" aria-hidden="true"></div>
+<div class="cols">
+<div><h3>Read</h3><ul><li><a href="/repaint-checker">Repaint checker</a></li><li><a href="/repainting">What is repainting?</a></li><li><a href="/tradingview-backtest-accuracy">Is backtesting accurate?</a></li><li><a href="https://taughttotrade.com/#explainers">All explainers</a></li></ul></div>
+<div><h3>Scripts</h3><ul><li><a href="https://www.tradingview.com/u/taughttotrade/" target="_blank" rel="noopener">On TradingView</a></li><li><a href="https://github.com/obekheet/pine-script-indicators" target="_blank" rel="noopener">Code on GitHub</a></li><li><a href="https://taughttotrade.com/#scripts">All scripts</a></li></ul></div>
+<div><h3>Shop</h3><ul><li><a href="https://taughttotrade.gumroad.com/l/otnor" target="_blank" rel="noopener">Teardown Letter</a></li><li><a href="https://taughttotrade.gumroad.com/l/field-edition" target="_blank" rel="noopener">Free checklist</a></li><li><a href="https://taughttotrade.com/#prices">All prices</a></li></ul></div>
+<div><h3>About</h3><ul><li><a href="https://taughttotrade.com/#principles">How we work</a></li><li><a href="/privacy">Privacy</a></li></ul></div>
+</div>
+<div class="legal"><p>Educational tools only, not investment advice. Trading involves substantial risk of loss. No performance claims. You set your own alerts; nothing here sends buy/sell signals.</p><p>&copy; 2026 Taught to Trade</p></div>
+</div></footer>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "e0f6d58dfdf749eb83ae8e75100eb65c"}'></script><!-- End Cloudflare Web Analytics -->
+</body>
+</html>

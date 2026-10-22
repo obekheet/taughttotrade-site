@@ -212,7 +212,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--line);padding-block:56
 </style>
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://taughttotrade.com/#org","name":"Taught to Trade","alternateName":"taughttotrade","url":"https://taughttotrade.com/","description":"Teardowns of popular TradingView indicators: what they actually compute and where they fail. Free open-source Pine Script tools. Education only, no signals.","sameAs":["https://www.tradingview.com/u/taughttotrade/","https://taughttotrade.gumroad.com/"]},{"@type":"WebSite","@id":"https://taughttotrade.com/#site","name":"Taught to Trade","alternateName":"taughttotrade.com","url":"https://taughttotrade.com/","publisher":{"@id":"https://taughttotrade.com/#org"}}]}</script></head>
 <body>
-<p class="announce"><span class="hide-sm">Free: </span><span data-count="explainers">13</span> indicator teardowns, a repaint checker and <span data-count="scripts">11</span> open-source scripts.<span class="hide-sm"> No buy/sell signals, ever.</span></p>
+<p class="announce"><span class="hide-sm">Free: </span><span data-count="explainers">14</span> indicator teardowns, a repaint checker and <span data-count="scripts">11</span> open-source scripts.<span class="hide-sm"> No buy/sell signals, ever.</span></p>
 <header class="topbar">
 <div class="wrap">
 <a class="brand" href="/">Taught to Trade<small>Systems over signals.</small></a>
@@ -256,7 +256,7 @@ buy = crossover(<mark>ema(price, 1)</mark>, stop)</code></pre>
 <div class="wrap">
 <div class="ticks" aria-hidden="true"></div>
 <dl class="ledger">
-<div><dt>Free teardowns</dt><dd data-count="explainers">13</dd></div>
+<div><dt>Free teardowns</dt><dd data-count="explainers">14</dd></div>
 <div><dt>Open-source scripts</dt><dd data-count="scripts">11</dd></div>
 <div><dt>Buy/sell signals</dt><dd>0</dd></div>
 <div><dt>Teardown Letter</dt><dd>$19<small>/month</small></dd></div>
@@ -330,6 +330,7 @@ buy = crossover(<mark>ema(price, 1)</mark>, stop)</code></pre>
 <li><a class="row-link" href="/qqe-mod"><span class="row-name">QQE MOD, explained from its source</span><span class="row-desc">How the QQE MOD indicator on TradingView actually works, from its source: a smoothed RSI with Supertrend-style bands. What the blue and red bars mean, what each setting does, and whether it repaints.</span><span class="row-tag">QQE MOD</span><span class="row-go" aria-hidden="true">&rarr;</span></a></li>
 <li><a class="row-link" href="/pivot-points-high-low"><span class="row-name">Pivot highs and lows, explained from the source</span><span class="row-desc">How pivot high and pivot low indicators on TradingView work, from the source of the most popular one: why every pivot is drawn back in time after a fixed delay, what the ghost &quot;missed&quot; levels are, and where it fails.</span><span class="row-tag">Pivot highs and lows</span><span class="row-go" aria-hidden="true">&rarr;</span></a></li>
 <li><a class="row-link" href="/hull-suite"><span class="row-name">Hull Suite, explained from the source</span><span class="row-desc">How the Hull Suite indicator on TradingView works, from its published source: the Hull moving average, why the band is the line against itself two bars ago, what Length 55 vs 180 does, why the higher-timeframe mode repaints and mostly shows red, and where it fails.</span><span class="row-tag">Hull Suite</span><span class="row-go" aria-hidden="true">&rarr;</span></a></li>
+<li><a class="row-link" href="/range-filter"><span class="row-name">Range Filter, explained from the source</span><span class="row-desc">How the Range Filter Buy and Sell 5min indicator on TradingView works, from its published source: a price line that only moves when price leaves a band, why the labels need a 2x range move from the last extreme, what 100 / 3 vs the original 14 / 2.618 changes, and where it fails.</span><span class="row-tag">Range Filter</span><span class="row-go" aria-hidden="true">&rarr;</span></a></li>
 </ol>
 </div>
 </section>
