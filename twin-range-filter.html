@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0E1526">
+<meta name="description" content="How the Twin Range Filter indicator on TradingView works, from its published source: two smoothed ranges averaged into one band, a Range Filter line, Long/Short labels after a 2x range turn, why the &quot;twin&quot; barely matters, what the settings change, and where it fails.">
+<link rel="canonical" href="https://taughttotrade.com/twin-range-filter">
+<title>Twin Range Filter explained: why the two ranges act as one, the 27/1.6 and 55/2 settings, and where it fails | Taught to Trade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>:root{--ink:#0e1526;--ink-2:#0a0f1c;--panel:#141e33;--paper:#f5f2ea;--mist:#bdc5d5;--dim:#8b95a8;--blue:#2f6fed;--blue-soft:#8fb0ff;--amber:#e8a13c;--line:rgba(245,242,234,.12);--line-strong:rgba(245,242,234,.28);--max:1180px;--sans:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;--mono:"DM Mono",ui-monospace,Consolas,monospace;color-scheme:dark}
+*{box-sizing:border-box}html{scroll-behavior:smooth;background:var(--ink)}
+body{margin:0;background:var(--ink);color:var(--paper);font:16px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:inherit}a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+h1,h2,h3{font-weight:300;letter-spacing:-.025em;text-wrap:balance}
+.wrap{width:100%;max-width:calc(var(--max) + 64px);margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+@media(min-width:768px){.wrap{padding-left:32px;padding-right:32px}}
+.kicker,.nav a,.btn,.button,.textlink{font-family:var(--mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase}
+.kicker{color:var(--dim);margin:0 0 18px}.kicker a{color:var(--dim);text-decoration:none;border-bottom:1px solid var(--line-strong)}.kicker a:hover{color:var(--paper)}
+.announce{margin:0;border-bottom:1px solid var(--line);text-align:center;font:500 .72rem/1.4 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mist);padding:10px 16px}
+.topbar{position:sticky;top:0;z-index:5;background:rgba(14,21,38,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:64px}
+.brand{text-decoration:none;font-weight:600;letter-spacing:-.01em;line-height:1.1}
+.brand small{display:block;font:400 .66rem/1.4 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.nav{display:flex;align-items:center;gap:22px}.nav a{text-decoration:none;color:var(--mist)}.nav a:hover{color:var(--paper)}
+@media(max-width:700px){.nav a:not(.btn){display:none}}
+.btn,.button{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:46px;padding:0 20px;border:1px solid var(--line-strong);border-radius:2px;text-decoration:none;color:var(--paper);background:transparent;cursor:pointer;text-align:center}
+.btn:hover,.button:hover{border-color:var(--paper)}
+.btn.primary,.button:not(.secondary){background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.primary:hover,.button:not(.secondary):hover{background:#3f7cf5}
+.textlink{color:var(--paper);text-decoration:none;border-bottom:1px solid var(--line-strong);padding-bottom:3px;white-space:nowrap}.textlink:hover{border-color:var(--paper)}
+.ticks{height:16px;border-bottom:1px solid var(--line-strong);background:repeating-linear-gradient(90deg,var(--line-strong) 0 1px,transparent 1px 100%) left bottom/calc(100% / 12) 14px repeat-x,repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px 100%) left bottom/calc(100% / 60) 6px repeat-x}
+footer{background:var(--ink-2);border-top:1px solid var(--line);padding-block:56px 32px}
+.foot-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:16px;margin-bottom:22px}
+.foot-top .tag{margin:0;font-size:clamp(1.4rem,1.1rem + 1.2vw,2.2rem);font-weight:300;letter-spacing:-.02em}.foot-top .tag em{font-style:normal;color:var(--blue-soft)}
+.cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px 20px;padding-block:34px}
+@media(min-width:900px){.cols{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.cols h3{font:500 .72rem/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin:0 0 14px}
+.cols ul{list-style:none;margin:0;padding:0;display:grid;gap:9px}.cols a{text-decoration:none;color:var(--mist);font-size:.94rem}.cols a:hover{color:var(--paper)}
+.legal{border-top:1px solid var(--line);padding-top:22px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;font:400 .72rem/1.6 var(--mono);color:var(--dim)}.legal p{margin:0;max-width:80ch}
+@media(max-width:640px){.hide-sm{display:none}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}</style>
+<style>
+.article-page{padding-block:clamp(56px,8vw,104px)}
+.article{width:100%;max-width:calc(720px + 2 * 16px);margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.article h1{font-size:clamp(2.4rem,1.7rem + 3vw,4.2rem);line-height:1.04;margin:0 0 34px}
+.article h2{font-size:clamp(1.5rem,1.25rem + 1vw,2.1rem);line-height:1.15;margin:64px 0 18px;padding-top:22px;border-top:1px solid var(--line)}
+.article h3{font-size:1.3rem;margin:36px 0 12px}
+.article p,.article li{color:var(--mist);font-size:1.03rem;line-height:1.8}
+.article p{margin:0 0 22px}.article strong{color:var(--paper);font-weight:600}
+.article a{color:var(--blue-soft)}
+.article ul,.article ol{margin:0 0 28px;padding-left:1.3rem}.article li{margin:0 0 10px;padding-left:4px}
+.article pre{margin:24px 0 30px;padding:18px 20px;overflow-x:auto;border:1px solid var(--line);background:var(--panel);color:var(--paper);font:400 .9rem/1.7 var(--mono);white-space:pre-wrap}
+.article code{font-family:var(--mono);font-size:.92em}
+.article .table-wrap{overflow-x:auto;margin:24px 0 30px}
+.article table{width:100%;border-collapse:collapse;font-size:.94rem}
+.article th,.article td{text-align:left;padding:11px 12px 11px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--mist)}
+.article thead th{font:500 .72rem/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim);border-bottom-color:var(--line-strong)}
+.article .disclaimer{margin-top:46px;color:var(--dim);font-size:.88rem}
+.article-actions{display:flex;flex-wrap:wrap;align-items:center;gap:18px;margin-top:34px}
+.article-actions .back{font-family:var(--mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);text-decoration:none;border-bottom:1px solid var(--line-strong);padding-bottom:3px}
+.article-actions .back:hover{border-color:var(--paper)}
+@media(max-width:520px){.article h2{margin-top:52px}.article-actions .button{width:100%}}
+</style>
+<style>
+.article .also-explained{margin-top:46px;padding-top:24px;border-top:1px solid var(--line)}
+.article .also-explained a{color:var(--paper);text-decoration:none;border-bottom:1px solid var(--blue);padding-bottom:2px}
+.article .also-explained a:hover{color:#8bb0ff}
+</style>
+</head>
+<body>
+<p class="announce"><span class="hide-sm">Free: </span>indicator teardowns, a repaint checker and open-source scripts.<span class="hide-sm"> No buy/sell signals, ever.</span></p>
+<header class="topbar"><div class="wrap"><a class="brand" href="https://taughttotrade.com/">Taught to Trade<small>Systems over signals.</small></a><nav class="nav" aria-label="Primary"><a href="https://taughttotrade.com/#explainers">Explainers</a><a href="https://taughttotrade.com/#scripts">Scripts</a><a href="https://taughttotrade.com/#prices">Prices</a><a class="btn primary" href="https://taughttotrade.gumroad.com/l/otnor" target="_blank" rel="noopener">Subscribe $19/mo</a></nav></div></header>
+<main id="top" class="article-page"><article class="article">
+<p class="kicker"><a href="https://taughttotrade.com/#explainers">Explainers</a> / Twin Range Filter</p>
+<h1>Twin Range Filter, explained from the source</h1>
+<p>Twin Range Filter by colinmck is one of the most-boosted trend scripts on TradingView, and KivancOzbilgic's "Twin Range Filter Visualized" draws the same thing as a line. The name suggests two filters working together. The published source shows something simpler: <strong>two range measurements are averaged into one number, and that one number drives an ordinary <a href="/range-filter">Range Filter</a>.</strong> The Long and Short labels come after price has turned about two ranges from its last extreme close.</p>
+<h2>The two ranges</h2>
+<p>The script measures how much price usually moves per bar, twice:</p>
+<ul><li><strong>Fast:</strong> the average absolute bar-to-bar change of the close over 27 bars, smoothed again over 53 bars (twice the period minus one), times 1.6.</li><li><strong>Slow:</strong> the same over 55 bars, smoothed over 109 bars, times 2.0.</li></ul>
+<p>It then takes the <strong>average of the two</strong>. Call that <strong>r</strong>. Both halves measure the same thing (typical bar size) with long, slow smoothing, so they rise and fall together. In our simulation they were correlated at 0.9975, and their average was matched to within about 1% by a single range of 40 bars times 1.8. The labels from that single range were the same as the twin's on 98% of bars. In practice, "twin" means <strong>one range of about 1.8 typical bar moves</strong>.</p>
+<h2>The line: a ratchet that ignores small moves</h2>
+<p>The filter is the same rule as the Range Filter:</p>
+<ul><li>If the close is above the line by more than r, the line moves up to <strong>close minus r</strong>. Otherwise it stays.</li><li>If the close is below the line by more than r, the line moves down to <strong>close plus r</strong>. Otherwise it stays.</li></ul>
+<p>So the line ignores any move smaller than r; in the simulation it stayed flat on about two bars in three. colinmck's version does not plot this line at all, only the labels. The Visualized version plots a stepped line built from the filter plus and minus r.</p>
+<h2>The labels: a 2 x range turn on closes</h2>
+<p>The script counts how many times in a row the line has stepped up or down. A <strong>Long</strong> label prints on the first bar where the line steps up after its last step was down, and <strong>Short</strong> on the reverse. The two-part conditions in the code reduce to "close above the line, last step up, and the close changed".</p>
+<p>After a rise the line sits r below the highest close, so it can only step down after a close more than r below the line: <strong>at least about 2 r below the highest close</strong>. In the simulation the median move from the extreme close to the label was 2.3 r, and the label came a median of 5 bars after that extreme.</p>
+<p>The Visualized version labels BUY and SELL when the close crosses its stepped line instead. In our simulation 99% of those crosses landed within one bar of a colinmck label: the two scripts mark the same turns.</p>
+<h2>Twin vs the original Range Filter</h2>
+<p>The difference that matters is the width. The Range Filter scripts use multipliers of 2.618 (DonovanWall's original) or 3.0 (the "Buy and Sell 5min" version); the twin's effective multiplier is about 1.8. A narrower band waits for a smaller turn, so it labels more often and reverses more often:</p>
+<div class="table-wrap"><table><thead><tr><th>Simulation, random walk</th><th>label every</th><th>undone within 5 bars</th></tr></thead><tbody><tr><td>Twin Range Filter (27/1.6 + 55/2.0)</td><td>16 bars</td><td>18%</td></tr><tr><td>Range Filter, original (14 / 2.618)</td><td>28 bars</td><td>5.5%</td></tr><tr><td>Range Filter Buy and Sell 5min (100 / 3.0)</td><td>35 bars</td><td>3.2%</td></tr></tbody></table></div>
+<p>Earlier labels and more labels that reverse are the same setting seen from two sides.</p>
+<h2>Does it repaint?</h2>
+<p>On closed bars, no: the range, the line and the labels use only current and past closes, so a finished bar does not change. On the bar still forming, the close is the live price, so a label can appear mid-bar and vanish before the close. Set alerts to "once per bar close" if you only want closed-bar labels. More in <a href="/repainting">what repainting is</a>, or test a script with the <a href="/repaint-checker">repaint checker</a>.</p>
+<h2>Settings, honestly</h2>
+<ul><li><strong>Fast period / Fast range (27 / 1.6) and Slow period / Slow range (55 / 2.0):</strong> because the two ranges move together, what you are really setting is one width, roughly the average of the two multipliers, and one smoothing length somewhere between the two periods.</li><li><strong>To change how often it labels, change the multipliers.</strong> Raising both widens the band: fewer labels, later. Lowering both does the reverse.</li><li>Changing only one period changes very little, because the average is dominated by what both halves share.</li><li>There is no setting that gives earlier labels without more labels that reverse. "Best settings" depend on what you are willing to give up, and the script contains no test of any setting.</li></ul>
+<h2>Where it fails</h2>
+<ul><li><strong>The label is a trailing stop, not a forecast.</strong> It prints only after price has already come back about two ranges from its extreme close.</li><li><strong>It labels noise too, and often.</strong> On random-walk prices with nothing to predict it printed a label about every 16 bars, and about one in five reversed within 5 bars.</li><li><strong>"Twin" adds little.</strong> The two ranges are nearly the same measurement, so the script behaves like a single Range Filter with a narrower band. Stacking it with a Range Filter or the Visualized version on the same chart repeats one signal, not three.</li><li><strong>Slow to adapt.</strong> The ranges are smoothed over 53 and 109 bars, so after volatility changes the band stays too tight or too wide for a while.</li><li><strong>Open-bar labels.</strong> A label on the bar still forming can disappear before the close.</li><li><strong>"Long" and "Short" are names, not results.</strong> On a finished chart every label sits near a turn; live, each one came after the move it is named for.</li></ul>
+<p><strong>Also explained:</strong> <a href="/range-filter">Range Filter</a> · <a href="/supertrend">Supertrend</a> · <a href="/ut-bot-alerts">UT Bot Alerts</a> · <a href="/repainting">Repainting</a></p>
+<p><em>Educational only. Not financial advice. Nothing here is a recommendation to buy or sell anything. Twin Range Filter is by colinmck, and Twin Range Filter Visualized is by KivancOzbilgic, on TradingView; this page explains their published open-source code and is not affiliated with either author.</em></p>
+<p class="also-explained">Also explained: <a href="/repaint-checker">Repaint checker</a>, <a href="/vwap">VWAP</a>, <a href="/supertrend">Supertrend</a>, <a href="/rsi">RSI</a>, <a href="/ut-bot-alerts">UT Bot Alerts</a>, <a href="/nadaraya-watson-envelope">Nadaraya-Watson Envelope</a>, <a href="/squeeze-momentum">Squeeze Momentum</a>, <a href="/repainting">What is repainting on TradingView?</a>, <a href="/tradingview-backtest-accuracy">Is TradingView backtesting accurate?</a>, <a href="/chandelier-exit">Chandelier Exit</a>, <a href="/wavetrend">WaveTrend Oscillator</a>, <a href="/qqe-mod">QQE MOD</a>, <a href="/pivot-points-high-low">Pivot highs and lows</a>, <a href="/hull-suite">Hull Suite</a>, <a href="/range-filter">Range Filter</a></p>
+<section class="tt-signup" aria-labelledby="tt-signup-h">
+<style>
+.tt-signup{margin:40px 0 8px;padding:22px 20px;border:1px solid rgba(91,141,239,.35);border-radius:12px;background:rgba(91,141,239,.06)}
+.tt-signup h2{margin:0 0 8px;font-size:1.25rem}
+.tt-signup p{margin:0 0 12px}
+.tt-signup-form{display:flex;gap:8px;flex-wrap:wrap}
+.tt-signup-form input{flex:1 1 220px;min-height:44px;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.25);color:inherit;font:inherit}
+.tt-signup-form button{min-height:44px;padding:10px 18px;border:0;border-radius:8px;background:#2F6FED;color:#fff;font:inherit;font-weight:600;cursor:pointer}
+.tt-signup-note{font-size:.85rem;opacity:.75;margin-top:10px}
+.tt-signup a{color:#8fb0ff}
+.tt-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+<h2 id="tt-signup-h">Get the next teardown by email</h2>
+<p>One short email when a new teardown or free tool goes live, about twice a month. No signals, no hype. Unsubscribe in one click.</p>
+<form class="tt-signup-form" action="https://app.kit.com/forms/10025491/subscriptions" method="post">
+<label class="tt-sr" for="tt-email">Email address</label>
+<input id="tt-email" type="email" name="email_address" required autocomplete="email" placeholder="you@example.com">
+<button type="submit">Sign up free</button>
+</form>
+<p class="tt-signup-done" hidden>Almost done. Check your inbox and click the confirmation link.</p>
+<p class="tt-signup-note">Sent with Kit. Your address is used only for these emails. <a href="/privacy">Privacy</a></p>
+<script>
+(function(){var s=document.currentScript.parentNode,f=s.querySelector('form'),d=s.querySelector('.tt-signup-done');
+f.addEventListener('submit',function(e){e.preventDefault();var b=f.querySelector('button');b.disabled=true;
+fetch(f.action,{method:'POST',body:new FormData(f),mode:'no-cors'}).then(function(){f.hidden=true;d.hidden=false;}).catch(function(){f.submit();});});})();
+</script>
+</section>
+<div class="article-actions"><a class="button" href="https://taughttotrade.gumroad.com/l/otnor" target="_blank" rel="noopener">Subscribe to the Teardown Letter: $19/mo</a><a class="back" href="https://taughttotrade.com/">Back to Taught to Trade</a></div>
+</article></main>
+<footer><div class="wrap">
+<div class="foot-top"><a class="brand" href="https://taughttotrade.com/">Taught to Trade<small>Systems over signals.</small></a><p class="tag">The machine shop, <em>not the treasure map.</em></p></div>
+<div class="ticks" aria-hidden="true"></div>
+<div class="cols">
+<div><h3>Read</h3><ul><li><a href="/repaint-checker">Repaint checker</a></li><li><a href="/repainting">What is repainting?</a></li><li><a href="/tradingview-backtest-accuracy">Is backtesting accurate?</a></li><li><a href="https://taughttotrade.com/#explainers">All explainers</a></li></ul></div>
+<div><h3>Scripts</h3><ul><li><a href="https://www.tradingview.com/u/taughttotrade/" target="_blank" rel="noopener">On TradingView</a></li><li><a href="https://github.com/obekheet/pine-script-indicators" target="_blank" rel="noopener">Code on GitHub</a></li><li><a href="https://taughttotrade.com/#scripts">All scripts</a></li></ul></div>
+<div><h3>Shop</h3><ul><li><a href="https://taughttotrade.gumroad.com/l/otnor" target="_blank" rel="noopener">Teardown Letter</a></li><li><a href="https://taughttotrade.gumroad.com/l/field-edition" target="_blank" rel="noopener">Free checklist</a></li><li><a href="https://taughttotrade.com/#prices">All prices</a></li></ul></div>
+<div><h3>About</h3><ul><li><a href="https://taughttotrade.com/#principles">How we work</a></li><li><a href="/privacy">Privacy</a></li></ul></div>
+</div>
+<div class="legal"><p>Educational tools only, not investment advice. Trading involves substantial risk of loss. No performance claims. You set your own alerts; nothing here sends buy/sell signals.</p><p>&copy; 2026 Taught to Trade</p></div>
+</div></footer>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "e0f6d58dfdf749eb83ae8e75100eb65c"}'></script><!-- End Cloudflare Web Analytics -->
+</body>
+</html>
