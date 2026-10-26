@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0E1526">
+<meta name="description" content="How SSL Hybrid by Mihkel00 on TradingView works, from its published source: what the Baseline, SSL1, SSL2 and Exit lines each are, why SSL1 has no settings of its own, what the diamond and the Risk table measure, what changes on the live bar, and where it fails.">
+<link rel="canonical" href="https://taughttotrade.com/ssl-hybrid">
+<title>SSL Hybrid indicator settings explained from the source: Baseline, SSL1, SSL2, Exit and the Risk table | Taught to Trade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>:root{--ink:#0e1526;--ink-2:#0a0f1c;--panel:#141e33;--paper:#f5f2ea;--mist:#bdc5d5;--dim:#8b95a8;--blue:#2f6fed;--blue-soft:#8fb0ff;--amber:#e8a13c;--line:rgba(245,242,234,.12);--line-strong:rgba(245,242,234,.28);--max:1180px;--sans:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;--mono:"DM Mono",ui-monospace,Consolas,monospace;color-scheme:dark}
+*{box-sizing:border-box}html{scroll-behavior:smooth;background:var(--ink)}
+body{margin:0;background:var(--ink);color:var(--paper);font:16px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:inherit}a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+h1,h2,h3{font-weight:300;letter-spacing:-.025em;text-wrap:balance}
+.wrap{width:100%;max-width:calc(var(--max) + 64px);margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+@media(min-width:768px){.wrap{padding-left:32px;padding-right:32px}}
+.kicker,.nav a,.btn,.button,.textlink{font-family:var(--mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase}
+.kicker{color:var(--dim);margin:0 0 18px}.kicker a{color:var(--dim);text-decoration:none;border-bottom:1px solid var(--line-strong)}.kicker a:hover{color:var(--paper)}
+.announce{margin:0;border-bottom:1px solid var(--line);text-align:center;font:500 .72rem/1.4 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mist);padding:10px 16px}
+.topbar{position:sticky;top:0;z-index:5;background:rgba(14,21,38,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:64px}
+.brand{text-decoration:none;font-weight:600;letter-spacing:-.01em;line-height:1.1}
+.brand small{display:block;font:400 .66rem/1.4 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.nav{display:flex;align-items:center;gap:22px}.nav a{text-decoration:none;color:var(--mist)}.nav a:hover{color:var(--paper)}
+@media(max-width:700px){.nav a:not(.btn){display:none}}
+.btn,.button{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:46px;padding:0 20px;border:1px solid var(--line-strong);border-radius:2px;text-decoration:none;color:var(--paper);background:transparent;cursor:pointer;text-align:center}
+.btn:hover,.button:hover{border-color:var(--paper)}
+.btn.primary,.button:not(.secondary){background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.primary:hover,.button:not(.secondary):hover{background:#3f7cf5}
+.textlink{color:var(--paper);text-decoration:none;border-bottom:1px solid var(--line-strong);padding-bottom:3px;white-space:nowrap}.textlink:hover{border-color:var(--paper)}
+.ticks{height:16px;border-bottom:1px solid var(--line-strong);background:repeating-linear-gradient(90deg,var(--line-strong) 0 1px,transparent 1px 100%) left bottom/calc(100% / 12) 14px repeat-x,repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px 100%) left bottom/calc(100% / 60) 6px repeat-x}
+footer{background:var(--ink-2);border-top:1px solid var(--line);padding-block:56px 32px}
+.foot-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:16px;margin-bottom:22px}
+.foot-top .tag{margin:0;font-size:clamp(1.4rem,1.1rem + 1.2vw,2.2rem);font-weight:300;letter-spacing:-.02em}.foot-top .tag em{font-style:normal;color:var(--blue-soft)}
+.cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px 20px;padding-block:34px}
+@media(min-width:900px){.cols{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.cols h3{font:500 .72rem/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin:0 0 14px}
+.cols ul{list-style:none;margin:0;padding:0;display:grid;gap:9px}.cols a{text-decoration:none;color:var(--mist);font-size:.94rem}.cols a:hover{color:var(--paper)}
+.legal{border-top:1px solid var(--line);padding-top:22px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;font:400 .72rem/1.6 var(--mono);color:var(--dim)}.legal p{margin:0;max-width:80ch}
+@media(max-width:640px){.hide-sm{display:none}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}</style>
+<style>
+.article-page{padding-block:clamp(56px,8vw,104px)}
+.article{width:100%;max-width:calc(720px + 2 * 16px);margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.article h1{font-size:clamp(2.4rem,1.7rem + 3vw,4.2rem);line-height:1.04;margin:0 0 34px}
+.article h2{font-size:clamp(1.5rem,1.25rem + 1vw,2.1rem);line-height:1.15;margin:64px 0 18px;padding-top:22px;border-top:1px solid var(--line)}
+.article h3{font-size:1.3rem;margin:36px 0 12px}
+.article p,.article li{color:var(--mist);font-size:1.03rem;line-height:1.8}
+.article p{margin:0 0 22px}.article strong{color:var(--paper);font-weight:600}
+.article a{color:var(--blue-soft)}
+.article ul,.article ol{margin:0 0 28px;padding-left:1.3rem}.article li{margin:0 0 10px;padding-left:4px}
+.article pre{margin:24px 0 30px;padding:18px 20px;overflow-x:auto;border:1px solid var(--line);background:var(--panel);color:var(--paper);font:400 .9rem/1.7 var(--mono);white-space:pre-wrap}
+.article code{font-family:var(--mono);font-size:.92em}
+.article .table-wrap{overflow-x:auto;margin:24px 0 30px}
+.article table{width:100%;border-collapse:collapse;font-size:.94rem}
+.article th,.article td{text-align:left;padding:11px 12px 11px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--mist)}
+.article thead th{font:500 .72rem/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim);border-bottom-color:var(--line-strong)}
+.article .disclaimer{margin-top:46px;color:var(--dim);font-size:.88rem}
+.article-actions{display:flex;flex-wrap:wrap;align-items:center;gap:18px;margin-top:34px}
+.article-actions .back{font-family:var(--mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);text-decoration:none;border-bottom:1px solid var(--line-strong);padding-bottom:3px}
+.article-actions .back:hover{border-color:var(--paper)}
+@media(max-width:520px){.article h2{margin-top:52px}.article-actions .button{width:100%}}
+</style>
+<style>
+.article .also-explained{margin-top:46px;padding-top:24px;border-top:1px solid var(--line)}
+.article .also-explained a{color:var(--paper);text-decoration:none;border-bottom:1px solid var(--blue);padding-bottom:2px}
+.article .also-explained a:hover{color:#8bb0ff}
+</style>
+</head>
+<body>
+<p class="announce"><span class="hide-sm">Free: </span>indicator teardowns, a repaint checker and open-source scripts.<span class="hide-sm"> No buy/sell signals, ever.</span></p>
+<header class="topbar"><div class="wrap"><a class="brand" href="https://taughttotrade.com/">Taught to Trade<small>Systems over signals.</small></a><nav class="nav" aria-label="Primary"><a href="https://taughttotrade.com/#explainers">Explainers</a><a href="https://taughttotrade.com/#scripts">Scripts</a><a href="https://taughttotrade.com/#prices">Prices</a><a class="btn primary" href="https://taughttotrade.gumroad.com/l/otnor" target="_blank" rel="noopener">Subscribe $19/mo</a></nav></div></header>
+<main id="top" class="article-page"><article class="article">
+<p class="kicker"><a href="https://taughttotrade.com/#explainers">Explainers</a> / SSL Hybrid</p>
+<h1>SSL Hybrid, explained from the source</h1>
+<p>SSL Hybrid by Mihkel00 is the most-boosted SSL script on TradingView. It was built for the NNFX way of trading, and its own header says it is meant for daily charts. It stacks four lines on the price chart, colours the bars, draws arrows and diamonds, and adds a small "Risk" table. People mostly ask for its best settings. <strong>The code shows something more useful first: what each line actually is, and that two of the settings people tune do not touch the line they think they do.</strong></p>
+<h2>The one rule behind every SSL line</h2>
+<p>An SSL line is two moving averages, one of the highs and one of the lows. The rule is the same for every SSL line in this script:</p>
+<ul><li>if the bar closes above the average of the highs, the state is <strong>up</strong>;</li><li>if it closes below the average of the lows, the state is <strong>down</strong>;</li><li>if it closes in between, the state <strong>stays what it was</strong>.</li></ul>
+<p>In an up state the line is drawn on the average of the lows; in a down state, on the average of the highs. That is why it jumps from one side of price to the other when the state flips.</p>
+<h2>The four lines</h2>
+<div class="table-wrap"><table><thead><tr><th>Line</th><th>What it is (defaults)</th><th>Its settings</th></tr></thead><tbody><tr><td><strong>Baseline</strong></td><td>a moving average of close, HMA 60, with a thin channel of 0.2 x the 60-bar average true range either side</td><td>Baseline Type, Baseline Length, Channel Multiplier</td></tr><tr><td><strong>SSL1</strong></td><td>the SSL rule on an HMA 60 of highs and lows</td><td><strong>none of its own</strong>: it always uses the Baseline Type and Length</td></tr><tr><td><strong>SSL2</strong> (dots)</td><td>the SSL rule on a fast "JMA" 5 of highs and lows</td><td>SSL2 Type, SSL2 Length, Continuation ATR Criteria</td></tr><tr><td><strong>Exit</strong> (arrows)</td><td>the SSL rule on an HMA 15 of highs and lows</td><td>Exit Type, Exit Length</td></tr></tbody></table></div>
+<p>So if you change "SSL2 Type" hoping to change the thick SSL1 line, nothing happens to it. To change SSL1 you have to change the Baseline as well.</p>
+<p>The bars are coloured by the Baseline channel: above the channel, the bullish colour; below it, the bearish colour; inside it, grey. The "JMA" option is a public approximation of a Jurik-style smoother, not Jurik Research's own JMA.</p>
+<h2>The arrows, the dots and the diamond</h2>
+<ul><li><strong>Arrows</strong> mark the close crossing the Exit line. The alerts name a cross down "EXIT LONG" and a cross up "EXIT SHORT".</li><li><strong>SSL2 dots</strong> take the bullish colour when the close is above both the Baseline and SSL2 and SSL2 is within 0.9 ATR of the close (the bearish colour for the mirror case). The script calls this "continuation".</li><li><strong>The white diamond</strong> appears when a candle's body is bigger than one ATR while the Baseline is within one ATR of the close. The script calls it a possible false breakout. It is a test of candle size only; nothing in the code checks what happened after.</li></ul>
+<h2>What the Risk table measures</h2>
+<ul><li><strong>Risk Level</strong> is how today's ATR ranks against the last 100 bars: above the 75th percentile it says "High", below the 25th "Low". It is a volatility rank, not a measure of how likely a trade is to lose.</li><li><strong>Entry Distance</strong> is how far the close is from the Baseline, in ATRs: under 1 "Near", under 2 "Extended", otherwise "Far".</li><li><strong>Vol %ile</strong> and <strong>ATR</strong> show the two raw numbers.</li></ul>
+<p>The table sits in the bottom-right corner, where TradingView's own badge can cover part of it.</p>
+<h2>Does SSL Hybrid repaint?</h2>
+<p><strong>Closed bars do not change.</strong> The script makes no higher-timeframe requests, so history stays put.</p>
+<p><strong>The live bar does.</strong> Every state, bar colour, dot colour, arrow and alert is worked out from the current price, so they can appear and disappear while the bar is still forming. On random-walk prices (our simulation, 230,000 bars, SSL Hybrid's default rules re-implemented and replayed tick by tick inside each bar), an exit arrow showed up during the bar and was gone at the close on about 11% of bars, against about 15% of bars that kept one. Roughly four in ten arrows you might see live would not survive the close. Set alerts to fire once per bar close if you want only the ones that stay. More in <a href="/repainting">what repainting is</a>.</p>
+<h2>How often it changes its mind</h2>
+<p>In the same simulation, at the default settings:</p>
+<div class="table-wrap"><table><thead><tr><th>Event</th><th>how often</th></tr></thead><tbody><tr><td>Exit arrow (close crosses the Exit line)</td><td>one every 7 bars</td></tr><tr><td>Next exit arrow within 5 bars</td><td>after 43% of arrows</td></tr><tr><td>SSL1 changes state</td><td>every 15 bars</td></tr><tr><td>Bar coloured grey (inside the Baseline channel)</td><td>8-9% of bars</td></tr><tr><td>White diamond</td><td>6% of bars</td></tr></tbody></table></div>
+<p>Random-walk prices have nothing to predict, so these numbers describe how the rules react to noise, not how they trade. They are a floor for how busy the chart will look.</p>
+<h2>Where it fails</h2>
+<ul><li><strong>The live bar is provisional.</strong> Arrows, colours and alerts can appear and vanish until the close.</li><li><strong>The Exit line flips often.</strong> At the default, the next arrow came within five bars after more than four in ten arrows on noise.</li><li><strong>SSL1 is tied to the Baseline.</strong> Tuning the SSL2 or Exit settings never changes it.</li><li><strong>"Risk" is a volatility rank.</strong> High ATR is labelled high risk; it says nothing about the odds of a trade.</li><li><strong>The diamond is a candle-size test.</strong> The code never checks whether a flagged candle was a false breakout.</li><li><strong>No test of any setting.</strong> There is no record in the script of how any combination performed, and "best settings" copied from a daily forex chart are a different tool on a 5-minute crypto chart.</li></ul>
+<p><strong>Also explained:</strong> <a href="/hull-suite">Hull Suite</a> · <a href="/qqe-mod">QQE MOD</a> · <a href="/range-filter">Range Filter</a> · <a href="/repainting">Repainting</a></p>
+<p><em>Educational only. Not financial advice. Nothing here is a recommendation to buy or sell anything. SSL Hybrid is by Mihkel00 on TradingView; this page explains its published open-source code and is not affiliated with the author.</em></p>
+<p class="also-explained">Also explained: <a href="/repaint-checker">Repaint checker</a>, <a href="/vwap">VWAP</a>, <a href="/supertrend">Supertrend</a>, <a href="/rsi">RSI</a>, <a href="/ut-bot-alerts">UT Bot Alerts</a>, <a href="/nadaraya-watson-envelope">Nadaraya-Watson Envelope</a>, <a href="/squeeze-momentum">Squeeze Momentum</a>, <a href="/repainting">What is repainting on TradingView?</a>, <a href="/tradingview-backtest-accuracy">Is TradingView backtesting accurate?</a>, <a href="/chandelier-exit">Chandelier Exit</a>, <a href="/wavetrend">WaveTrend Oscillator</a>, <a href="/qqe-mod">QQE MOD</a>, <a href="/pivot-points-high-low">Pivot highs and lows</a>, <a href="/hull-suite">Hull Suite</a>, <a href="/range-filter">Range Filter</a>, <a href="/twin-range-filter">Twin Range Filter</a>, <a href="/halftrend">HalfTrend</a>, <a href="/zigzag">ZigZag++</a></p>
+<section class="tt-signup" aria-labelledby="tt-signup-h">
+<style>
+.tt-signup{margin:40px 0 8px;padding:22px 20px;border:1px solid rgba(91,141,239,.35);border-radius:12px;background:rgba(91,141,239,.06)}
+.tt-signup h2{margin:0 0 8px;font-size:1.25rem}
+.tt-signup p{margin:0 0 12px}
+.tt-signup-form{display:flex;gap:8px;flex-wrap:wrap}
+.tt-signup-form input{flex:1 1 220px;min-height:44px;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.25);color:inherit;font:inherit}
+.tt-signup-form button{min-height:44px;padding:10px 18px;border:0;border-radius:8px;background:#2F6FED;color:#fff;font:inherit;font-weight:600;cursor:pointer}
+.tt-signup-note{font-size:.85rem;opacity:.75;margin-top:10px}
+.tt-signup a{color:#8fb0ff}
+.tt-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+<h2 id="tt-signup-h">Get the next teardown by email</h2>
+<p>One short email when a new teardown or free tool goes live, about twice a month. No signals, no hype. Unsubscribe in one click.</p>
+<form class="tt-signup-form" action="https://app.kit.com/forms/10025491/subscriptions" method="post">
+<label class="tt-sr" for="tt-email">Email address</label>
+<input id="tt-email" type="email" name="email_address" required autocomplete="email" placeholder="you@example.com">
+<button type="submit">Sign up free</button>
+</form>
+<p class="tt-signup-done" hidden>Almost done. Check your inbox and click the confirmation link.</p>
+<p class="tt-signup-note">Sent with Kit. Your address is used only for these emails. <a href="/privacy">Privacy</a></p>
+<script>
+(function(){var s=document.currentScript.parentNode,f=s.querySelector('form'),d=s.querySelector('.tt-signup-done');
+f.addEventListener('submit',function(e){e.preventDefault();var b=f.querySelector('button');b.disabled=true;
+fetch(f.action,{method:'POST',body:new FormData(f),mode:'no-cors'}).then(function(){f.hidden=true;d.hidden=false;}).catch(function(){f.submit();});});})();
+</script>
+</section>
+<div class="article-actions"><a class="button" href="https://taughttotrade.gumroad.com/l/otnor" target="_blank" rel="noopener">Subscribe to the Teardown Letter: $19/mo</a><a class="back" href="https://taughttotrade.com/">Back to Taught to Trade</a></div>
+</article></main>
+<footer><div class="wrap">
+<div class="foot-top"><a class="brand" href="https://taughttotrade.com/">Taught to Trade<small>Systems over signals.</small></a><p class="tag">The machine shop, <em>not the treasure map.</em></p></div>
+<div class="ticks" aria-hidden="true"></div>
+<div class="cols">
+<div><h3>Read</h3><ul><li><a href="/repaint-checker">Repaint checker</a></li><li><a href="/repainting">What is repainting?</a></li><li><a href="/tradingview-backtest-accuracy">Is backtesting accurate?</a></li><li><a href="https://taughttotrade.com/#explainers">All explainers</a></li></ul></div>
+<div><h3>Scripts</h3><ul><li><a href="https://www.tradingview.com/u/taughttotrade/" target="_blank" rel="noopener">On TradingView</a></li><li><a href="https://github.com/obekheet/pine-script-indicators" target="_blank" rel="noopener">Code on GitHub</a></li><li><a href="https://taughttotrade.com/#scripts">All scripts</a></li></ul></div>
+<div><h3>Shop</h3><ul><li><a href="https://taughttotrade.gumroad.com/l/otnor" target="_blank" rel="noopener">Teardown Letter</a></li><li><a href="https://taughttotrade.gumroad.com/l/field-edition" target="_blank" rel="noopener">Free checklist</a></li><li><a href="https://taughttotrade.com/#prices">All prices</a></li></ul></div>
+<div><h3>About</h3><ul><li><a href="https://taughttotrade.com/#principles">How we work</a></li><li><a href="/privacy">Privacy</a></li></ul></div>
+</div>
+<div class="legal"><p>Educational tools only, not investment advice. Trading involves substantial risk of loss. No performance claims. You set your own alerts; nothing here sends buy/sell signals.</p><p>&copy; 2026 Taught to Trade</p></div>
+</div></footer>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "e0f6d58dfdf749eb83ae8e75100eb65c"}'></script><!-- End Cloudflare Web Analytics -->
+</body>
+</html>
