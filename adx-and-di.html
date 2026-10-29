@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0E1526">
+<meta name="description" content="How the ADX and DI for v4 indicator on TradingView works, from its published source: how DI+ and DI- are built, why its ADX uses a simple average and differs from the built-in DMI, the start-of-chart warm-up, how to read it, and where it fails.">
+<link rel="canonical" href="https://taughttotrade.com/adx-and-di">
+<title>ADX and DI (BeikabuOyaji) explained from the source: why its ADX differs from TradingView&#x27;s DMI | Taught to Trade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>:root{--ink:#0e1526;--ink-2:#0a0f1c;--panel:#141e33;--paper:#f5f2ea;--mist:#bdc5d5;--dim:#8b95a8;--blue:#2f6fed;--blue-soft:#8fb0ff;--amber:#e8a13c;--line:rgba(245,242,234,.12);--line-strong:rgba(245,242,234,.28);--max:1180px;--sans:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;--mono:"DM Mono",ui-monospace,Consolas,monospace;color-scheme:dark}
+*{box-sizing:border-box}html{scroll-behavior:smooth;background:var(--ink)}
+body{margin:0;background:var(--ink);color:var(--paper);font:16px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:inherit}a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+h1,h2,h3{font-weight:300;letter-spacing:-.025em;text-wrap:balance}
+.wrap{width:100%;max-width:calc(var(--max) + 64px);margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+@media(min-width:768px){.wrap{padding-left:32px;padding-right:32px}}
+.kicker,.nav a,.btn,.button,.textlink{font-family:var(--mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase}
+.kicker{color:var(--dim);margin:0 0 18px}.kicker a{color:var(--dim);text-decoration:none;border-bottom:1px solid var(--line-strong)}.kicker a:hover{color:var(--paper)}
+.announce{margin:0;border-bottom:1px solid var(--line);text-align:center;font:500 .72rem/1.4 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mist);padding:10px 16px}
+.topbar{position:sticky;top:0;z-index:5;background:rgba(14,21,38,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:64px}
+.brand{text-decoration:none;font-weight:600;letter-spacing:-.01em;line-height:1.1}
+.brand small{display:block;font:400 .66rem/1.4 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.nav{display:flex;align-items:center;gap:22px}.nav a{text-decoration:none;color:var(--mist)}.nav a:hover{color:var(--paper)}
+@media(max-width:700px){.nav a:not(.btn){display:none}}
+.btn,.button{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:46px;padding:0 20px;border:1px solid var(--line-strong);border-radius:2px;text-decoration:none;color:var(--paper);background:transparent;cursor:pointer;text-align:center}
+.btn:hover,.button:hover{border-color:var(--paper)}
+.btn.primary,.button:not(.secondary){background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.primary:hover,.button:not(.secondary):hover{background:#3f7cf5}
+.textlink{color:var(--paper);text-decoration:none;border-bottom:1px solid var(--line-strong);padding-bottom:3px;white-space:nowrap}.textlink:hover{border-color:var(--paper)}
+.ticks{height:16px;border-bottom:1px solid var(--line-strong);background:repeating-linear-gradient(90deg,var(--line-strong) 0 1px,transparent 1px 100%) left bottom/calc(100% / 12) 14px repeat-x,repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px 100%) left bottom/calc(100% / 60) 6px repeat-x}
+footer{background:var(--ink-2);border-top:1px solid var(--line);padding-block:56px 32px}
+.foot-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:16px;margin-bottom:22px}
+.foot-top .tag{margin:0;font-size:clamp(1.4rem,1.1rem + 1.2vw,2.2rem);font-weight:300;letter-spacing:-.02em}.foot-top .tag em{font-style:normal;color:var(--blue-soft)}
+.cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px 20px;padding-block:34px}
+@media(min-width:900px){.cols{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.cols h3{font:500 .72rem/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin:0 0 14px}
+.cols ul{list-style:none;margin:0;padding:0;display:grid;gap:9px}.cols a{text-decoration:none;color:var(--mist);font-size:.94rem}.cols a:hover{color:var(--paper)}
+.legal{border-top:1px solid var(--line);padding-top:22px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;font:400 .72rem/1.6 var(--mono);color:var(--dim)}.legal p{margin:0;max-width:80ch}
+@media(max-width:640px){.hide-sm{display:none}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}</style>
+<style>
+.article-page{padding-block:clamp(56px,8vw,104px)}
+.article{width:100%;max-width:calc(720px + 2 * 16px);margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.article h1{font-size:clamp(2.4rem,1.7rem + 3vw,4.2rem);line-height:1.04;margin:0 0 34px}
+.article h2{font-size:clamp(1.5rem,1.25rem + 1vw,2.1rem);line-height:1.15;margin:64px 0 18px;padding-top:22px;border-top:1px solid var(--line)}
+.article h3{font-size:1.3rem;margin:36px 0 12px}
+.article p,.article li{color:var(--mist);font-size:1.03rem;line-height:1.8}
+.article p{margin:0 0 22px}.article strong{color:var(--paper);font-weight:600}
+.article a{color:var(--blue-soft)}
+.article ul,.article ol{margin:0 0 28px;padding-left:1.3rem}.article li{margin:0 0 10px;padding-left:4px}
+.article pre{margin:24px 0 30px;padding:18px 20px;overflow-x:auto;border:1px solid var(--line);background:var(--panel);color:var(--paper);font:400 .9rem/1.7 var(--mono);white-space:pre-wrap}
+.article code{font-family:var(--mono);font-size:.92em}
+.article .table-wrap{overflow-x:auto;margin:24px 0 30px}
+.article table{width:100%;border-collapse:collapse;font-size:.94rem}
+.article th,.article td{text-align:left;padding:11px 12px 11px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--mist)}
+.article thead th{font:500 .72rem/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim);border-bottom-color:var(--line-strong)}
+.article .disclaimer{margin-top:46px;color:var(--dim);font-size:.88rem}
+.article-actions{display:flex;flex-wrap:wrap;align-items:center;gap:18px;margin-top:34px}
+.article-actions .back{font-family:var(--mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);text-decoration:none;border-bottom:1px solid var(--line-strong);padding-bottom:3px}
+.article-actions .back:hover{border-color:var(--paper)}
+@media(max-width:520px){.article h2{margin-top:52px}.article-actions .button{width:100%}}
+</style>
+<style>
+.article .also-explained{margin-top:46px;padding-top:24px;border-top:1px solid var(--line)}
+.article .also-explained a{color:var(--paper);text-decoration:none;border-bottom:1px solid var(--blue);padding-bottom:2px}
+.article .also-explained a:hover{color:#8bb0ff}
+</style>
+</head>
+<body>
+<p class="announce"><span class="hide-sm">Free: </span>indicator teardowns, a repaint checker and open-source scripts.<span class="hide-sm"> No buy/sell signals, ever.</span></p>
+<header class="topbar"><div class="wrap"><a class="brand" href="https://taughttotrade.com/">Taught to Trade<small>Systems over signals.</small></a><nav class="nav" aria-label="Primary"><a href="https://taughttotrade.com/#explainers">Explainers</a><a href="https://taughttotrade.com/#scripts">Scripts</a><a href="https://taughttotrade.com/#prices">Prices</a><a class="btn primary" href="https://taughttotrade.gumroad.com/l/otnor" target="_blank" rel="noopener">Subscribe $19/mo</a></nav></div></header>
+<main id="top" class="article-page"><article class="article">
+<p class="kicker"><a href="https://taughttotrade.com/#explainers">Explainers</a> / ADX and DI</p>
+<h1>ADX and DI, explained from the source</h1>
+<p>"ADX and DI for v4" by BeikabuOyaji is one of the most-boosted free scripts on TradingView, with more than 45,000 boosts. It draws three lines: a green DI+, a red DI- and a navy ADX, plus a flat line at 20. <strong>Its DI+ and DI- are the standard ones, but its ADX is not: it averages DX with a simple 14-bar average instead of Wilder's smoothing, so it will not match TradingView's built-in DMI indicator.</strong></p>
+<h2>How to read the three lines</h2>
+<ul><li><strong>DI+</strong> measures how much of the recent range came from highs pushing above the previous high.</li><li><strong>DI-</strong> measures how much came from lows pushing below the previous low.</li><li><strong>ADX</strong> measures how far apart DI+ and DI- are, averaged over time. It says how one-sided the movement has been, not which side. A high ADX with DI- on top is a strong move down.</li></ul>
+<p>The usual reading is: DI+ above DI- means upward movement has dominated, DI- above DI+ means downward, and ADX above a threshold (this script draws 20) means that dominance has been strong. Those are descriptions of the past 14 bars, not forecasts.</p>
+<h2>What the code does</h2>
+<div class="table-wrap"><table><thead><tr><th>Step</th><th>This script</th><th>TradingView's built-in DMI</th></tr></thead><tbody><tr><td>True range, +DM, -DM</td><td>standard Wilder definitions</td><td>the same</td></tr><tr><td>Smoothing of TR, +DM, -DM</td><td>Wilder's running sum (sum - sum/14 + new)</td><td>Wilder's average (RMA)</td></tr><tr><td>DI+ and DI-</td><td>smoothed DM / smoothed TR x 100</td><td>the same</td></tr><tr><td>DX</td><td>\</td><td>DI+ - DI-\</td><td>/ (DI+ + DI-) x 100</td><td>the same</td></tr><tr><td><strong>ADX</strong></td><td><strong>simple 14-bar average of DX</strong></td><td><strong>Wilder's average (RMA) of DX</strong></td></tr></tbody></table></div>
+<p>The running sum is 14 times the Wilder average, and the 14 cancels when DM is divided by TR, so <strong>DI+ and DI- come out the same as the built-in</strong> once the start of the chart is behind you. In our simulation they matched to the 13th decimal place, and every DI cross fell on the same bar.</p>
+<p>The ADX is where they part. A simple average gives each of the last 14 DX values equal weight and drops the 15th entirely; Wilder's average keeps a fading memory of all of them. On the same prices, in our simulation:</p>
+<ul><li>the two ADX lines were <strong>about 4 points apart on average</strong>, and more than 10 points apart on 1 bar in 20;</li><li>they disagreed about whether ADX was above 20 on <strong>about 1 bar in 10</strong>;</li><li>the simple-average version <strong>crossed 20 about a quarter to a third more often</strong>, and only about one cross in six happened on the same bar in both.</li></ul>
+<p>So if you compare this script with the built-in DMI, or with ADX on another platform, a different number is expected. Neither is a bug; they are two definitions.</p>
+<h2>The start of the chart</h2>
+<p>The script fills missing previous values with zero. On the very first bar of the chart, "previous close" is therefore 0, so that bar's true range and +DM are the whole price. That oversized first value fades by 13/14 each bar. In our test series (prices near 100, bars about 1% wide) DI+ and DI- were more than 1 point off for the <strong>first 76 to 83 bars</strong>, and ADX over its first 40 bars was off by about 50 points on average. The warm-up is longer when the bars are narrow compared with the price.</p>
+<p>This only matters where the chart starts: a newly listed symbol, a monthly or weekly chart with little history, or the first screen of a long backtest. Ignore the first hundred or so bars.</p>
+<h2>The settings</h2>
+<div class="table-wrap"><table><thead><tr><th>Setting</th><th>Default</th><th>What it does</th></tr></thead><tbody><tr><td>len</td><td>14</td><td>the length of the DI smoothing <strong>and</strong> of the ADX average</td></tr><tr><td>th</td><td>20</td><td>where the flat line is drawn; nothing else uses it</td></tr></tbody></table></div>
+<p>One length drives both steps. The built-in DMI lets you set DI length and ADX smoothing separately.</p>
+<h2>Does it repaint?</h2>
+<p>No more than any indicator calculated on the current bar. It uses no higher-timeframe data. While a bar is open, its DI and ADX values move with price and settle when the bar closes, so a cross seen mid-bar can disappear. More in <a href="/repainting">what repainting is</a> and <a href="/repaint-checker">how to check a script yourself</a>.</p>
+<h2>Where it fails</h2>
+<ul><li><strong>Its ADX is not Wilder's ADX.</strong> The simple 14-bar average differs from the built-in DMI by about 4 points on average and crossed 20 a quarter to a third more often in our simulation.</li><li><strong>The first ~100 bars are wrong.</strong> Zero-filled previous values inflate the first bar; ignore the start of the chart.</li><li><strong>The 20 line is decoration.</strong> There are no alerts and no colour change when ADX crosses it.</li><li><strong>One length for two jobs.</strong> DI smoothing and ADX averaging cannot be set separately.</li><li><strong>ADX has no direction.</strong> A rising ADX can be a strengthening move down as easily as up.</li><li><strong>It describes the last 14 bars.</strong> DI crosses and ADX levels come after the movement they describe; there is no test of any setting here.</li></ul>
+<p><strong>Also explained:</strong> <a href="/supertrend">Supertrend</a> · <a href="/squeeze-momentum">Squeeze Momentum</a> · <a href="/cm-macd-mtf">CM MacD MTF</a> · <a href="/repainting">Repainting</a></p>
+<p><em>Educational only. Not financial advice. Nothing here is a recommendation to buy or sell anything. ADX and DI for v4 is by BeikabuOyaji on TradingView, published under the Mozilla Public License 2.0; this page explains its published open-source code and is not affiliated with the author. Simulation figures come from synthetic random-walk prices and say nothing about how the indicator trades.</em></p>
+<p class="also-explained">Also explained: <a href="/repaint-checker">Repaint checker</a>, <a href="/vwap">VWAP</a>, <a href="/supertrend">Supertrend</a>, <a href="/rsi">RSI</a>, <a href="/ut-bot-alerts">UT Bot Alerts</a>, <a href="/nadaraya-watson-envelope">Nadaraya-Watson Envelope</a>, <a href="/squeeze-momentum">Squeeze Momentum</a>, <a href="/repainting">What is repainting on TradingView?</a>, <a href="/tradingview-backtest-accuracy">Is TradingView backtesting accurate?</a>, <a href="/chandelier-exit">Chandelier Exit</a>, <a href="/wavetrend">WaveTrend Oscillator</a>, <a href="/qqe-mod">QQE MOD</a>, <a href="/pivot-points-high-low">Pivot highs and lows</a>, <a href="/hull-suite">Hull Suite</a>, <a href="/range-filter">Range Filter</a>, <a href="/twin-range-filter">Twin Range Filter</a>, <a href="/halftrend">HalfTrend</a>, <a href="/zigzag">ZigZag++</a>, <a href="/ssl-hybrid">SSL Hybrid</a>, <a href="/cm-macd-mtf">CM MacD Ultimate MTF</a>, <a href="/volume-profile-fixed-range">Volume Profile / Fixed Range</a></p>
+<section class="tt-signup" aria-labelledby="tt-signup-h">
+<style>
+.tt-signup{margin:40px 0 8px;padding:22px 20px;border:1px solid rgba(91,141,239,.35);border-radius:12px;background:rgba(91,141,239,.06)}
+.tt-signup h2{margin:0 0 8px;font-size:1.25rem}
+.tt-signup p{margin:0 0 12px}
+.tt-signup-form{display:flex;gap:8px;flex-wrap:wrap}
+.tt-signup-form input{flex:1 1 220px;min-height:44px;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.25);color:inherit;font:inherit}
+.tt-signup-form button{min-height:44px;padding:10px 18px;border:0;border-radius:8px;background:#2F6FED;color:#fff;font:inherit;font-weight:600;cursor:pointer}
+.tt-signup-note{font-size:.85rem;opacity:.75;margin-top:10px}
+.tt-signup a{color:#8fb0ff}
+.tt-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+<h2 id="tt-signup-h">Get the next teardown by email</h2>
+<p>One short email when a new teardown or free tool goes live, about twice a month. No signals, no hype. Unsubscribe in one click.</p>
+<form class="tt-signup-form" action="https://app.kit.com/forms/10025491/subscriptions" method="post">
+<label class="tt-sr" for="tt-email">Email address</label>
+<input id="tt-email" type="email" name="email_address" required autocomplete="email" placeholder="you@example.com">
+<button type="submit">Sign up free</button>
+</form>
+<p class="tt-signup-done" hidden>Almost done. Check your inbox and click the confirmation link.</p>
+<p class="tt-signup-note">Sent with Kit. Your address is used only for these emails. <a href="/privacy">Privacy</a></p>
+<script>
+(function(){var s=document.currentScript.parentNode,f=s.querySelector('form'),d=s.querySelector('.tt-signup-done');
+f.addEventListener('submit',function(e){e.preventDefault();var b=f.querySelector('button');b.disabled=true;
+fetch(f.action,{method:'POST',body:new FormData(f),mode:'no-cors'}).then(function(){f.hidden=true;d.hidden=false;}).catch(function(){f.submit();});});})();
+</script>
+</section>
+<div class="article-actions"><a class="button" href="https://taughttotrade.gumroad.com/l/otnor" target="_blank" rel="noopener">Subscribe to the Teardown Letter: $19/mo</a><a class="back" href="https://taughttotrade.com/">Back to Taught to Trade</a></div>
+</article></main>
+<footer><div class="wrap">
+<div class="foot-top"><a class="brand" href="https://taughttotrade.com/">Taught to Trade<small>Systems over signals.</small></a><p class="tag">The machine shop, <em>not the treasure map.</em></p></div>
+<div class="ticks" aria-hidden="true"></div>
+<div class="cols">
+<div><h3>Read</h3><ul><li><a href="/repaint-checker">Repaint checker</a></li><li><a href="/repainting">What is repainting?</a></li><li><a href="/tradingview-backtest-accuracy">Is backtesting accurate?</a></li><li><a href="https://taughttotrade.com/#explainers">All explainers</a></li></ul></div>
+<div><h3>Scripts</h3><ul><li><a href="https://www.tradingview.com/u/taughttotrade/" target="_blank" rel="noopener">On TradingView</a></li><li><a href="https://github.com/obekheet/pine-script-indicators" target="_blank" rel="noopener">Code on GitHub</a></li><li><a href="https://taughttotrade.com/#scripts">All scripts</a></li></ul></div>
+<div><h3>Shop</h3><ul><li><a href="https://taughttotrade.gumroad.com/l/otnor" target="_blank" rel="noopener">Teardown Letter</a></li><li><a href="https://taughttotrade.gumroad.com/l/field-edition" target="_blank" rel="noopener">Free checklist</a></li><li><a href="https://taughttotrade.com/#prices">All prices</a></li></ul></div>
+<div><h3>About</h3><ul><li><a href="https://taughttotrade.com/#principles">How we work</a></li><li><a href="/privacy">Privacy</a></li></ul></div>
+</div>
+<div class="legal"><p>Educational tools only, not investment advice. Trading involves substantial risk of loss. No performance claims. You set your own alerts; nothing here sends buy/sell signals.</p><p>&copy; 2026 Taught to Trade</p></div>
+</div></footer>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "e0f6d58dfdf749eb83ae8e75100eb65c"}'></script><!-- End Cloudflare Web Analytics -->
+</body>
+</html>
