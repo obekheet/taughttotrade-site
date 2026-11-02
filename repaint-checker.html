@@ -272,6 +272,7 @@ function run(){
   var h='<p class="sum">'+c.high+' high · '+c.medium+' medium · '+c.low+' low'+(c.ok?' · '+c.ok+' safe pattern':'')+'</p>';
   if(!f.length)h+='<div class="find ok"><h3><span class="lv">clean</span>None of the documented repaint patterns found</h3><p>That is not proof it never repaints. See "Where it fails" below.</p></div>';
   f.forEach(function(x){h+='<div class="find '+x.level+'"><h3><span class="lv">'+x.level+(x.line?' · line '+x.line:'')+'</span>'+esc(x.title)+'</h3><p>'+esc(x.why)+'</p><p><strong>Fix:</strong> '+esc(x.fix)+'</p></div>';});
+  if(c.high+c.medium>0)h+='<p class="sum audit-offer">A pattern scan reads single lines. It cannot follow how a flagged value flows into your entries, exits and alerts. A <a href="https://taughttotrade.gumroad.com/l/script-audit" target="_blank" rel="noopener">Pine Script Audit</a> reads every line by hand and shows what each finding changes on a chart ($49 report, $149 with fixed code).</p>';
   out.innerHTML=h;
 }
 document.getElementById('rr-go').addEventListener('click',run);
