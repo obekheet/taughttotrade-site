@@ -25,7 +25,7 @@ h1,h2,h3{font-weight:300;letter-spacing:-.025em;text-wrap:balance}
 .brand{text-decoration:none;font-weight:600;letter-spacing:-.01em;line-height:1.1}
 .brand small{display:block;font:400 .66rem/1.4 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
 .nav{display:flex;align-items:center;gap:22px}.nav a{text-decoration:none;color:var(--mist)}.nav a:hover{color:var(--paper)}
-@media(max-width:700px){.nav a:not(.btn){display:none}}
+@media(max-width:700px){.nav a:not(.btn):not(.nav-prices){display:none}.nav{gap:16px}}@media(max-width:520px){.brand small,.btn-long{display:none}}@media(max-width:420px){.nav .btn{padding:0 12px}}
 .btn,.button{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:46px;padding:0 20px;border:1px solid var(--line-strong);border-radius:2px;text-decoration:none;color:var(--paper);background:transparent;cursor:pointer;text-align:center}
 .btn:hover,.button:hover{border-color:var(--paper)}
 .btn.primary,.button:not(.secondary){background:var(--blue);border-color:var(--blue);color:#fff}
@@ -72,7 +72,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--line);padding-block:56
 </head>
 <body>
 <p class="announce"><span class="hide-sm">Free: </span>indicator teardowns, a repaint checker and open-source scripts.<span class="hide-sm"> No buy/sell signals, ever.</span></p>
-<header class="topbar"><div class="wrap"><a class="brand" href="https://taughttotrade.com/">Taught to Trade<small>Systems over signals.</small></a><nav class="nav" aria-label="Primary"><a href="https://taughttotrade.com/#explainers">Explainers</a><a href="https://taughttotrade.com/#scripts">Scripts</a><a href="https://taughttotrade.com/#prices">Prices</a><a class="btn primary" href="https://taughttotrade.gumroad.com/l/otnor" target="_blank" rel="noopener">Subscribe $19/mo</a></nav></div></header>
+<header class="topbar"><div class="wrap"><a class="brand" href="https://taughttotrade.com/">Taught to Trade<small>Systems over signals.</small></a><nav class="nav" aria-label="Primary"><a href="https://taughttotrade.com/#explainers">Explainers</a><a href="https://taughttotrade.com/#scripts">Scripts</a><a class="nav-prices" href="https://taughttotrade.com/#prices">Prices</a><a class="btn primary" href="https://taughttotrade.gumroad.com/l/otnor?utm_source=site&amp;utm_medium=header&amp;utm_campaign=privacy" target="_blank" rel="noopener">Subscribe<span class="btn-long"> $19/mo</span></a></nav></div></header>
 <main id="top" class="article-page"><article class="article">
 <p class="kicker">About / Privacy</p>
 <h1>Privacy</h1>
@@ -82,7 +82,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--line);padding-block:56
 <h2>Visit counts</h2>
 <p>We count visits with Cloudflare Web Analytics. It does not use cookies, does not fingerprint you and does not follow you across other sites. We see totals such as page, country, browser and referring site.</p>
 <h2>The repaint checker</h2>
-<p>The <a href="/repaint-checker">repaint checker</a> runs entirely in your browser. Code you paste into it is not sent to us or anyone else.</p>
+<p>The <a href="/repaint-checker">repaint checker</a> runs entirely in your browser. Code you paste into it is not sent to us or anyone else. We keep an anonymous count of checker runs, and of email form sends, as page views in the same visit counts. Those counts hold no code and no email address, and pasted code still never leaves your browser.</p>
 <h2>Purchases</h2>
 <p>Some pages carry a labelled TradingView affiliate link. If you click it, TradingView records the referral on its own site under its own privacy policy. We see totals only, never who you are.</p>
 <p>Paid products and the Teardown Letter are sold through Gumroad, which handles payment details under its own privacy policy. We see the order, your email address and the name you give Gumroad.</p>
@@ -95,7 +95,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--line);padding-block:56
 <div class="cols">
 <div><h3>Read</h3><ul><li><a href="/repaint-checker">Repaint checker</a></li><li><a href="/repainting">What is repainting?</a></li><li><a href="/tradingview-backtest-accuracy">Is backtesting accurate?</a></li><li><a href="https://taughttotrade.com/#explainers">All explainers</a></li></ul></div>
 <div><h3>Scripts</h3><ul><li><a href="https://www.tradingview.com/u/taughttotrade/" target="_blank" rel="noopener">On TradingView</a></li><li><a href="https://github.com/obekheet/pine-script-indicators" target="_blank" rel="noopener">Code on GitHub</a></li><li><a href="https://taughttotrade.com/#scripts">All scripts</a></li></ul></div>
-<div><h3>Shop</h3><ul><li><a href="https://taughttotrade.gumroad.com/l/otnor" target="_blank" rel="noopener">Teardown Letter</a></li><li><a href="https://taughttotrade.gumroad.com/l/field-edition" target="_blank" rel="noopener">Free checklist</a></li><li><a href="https://taughttotrade.com/#prices">All prices</a></li></ul></div>
+<div><h3>Shop</h3><ul><li><a href="https://taughttotrade.gumroad.com/l/otnor?utm_source=site&amp;utm_medium=footer&amp;utm_campaign=privacy" target="_blank" rel="noopener">Teardown Letter</a></li><li><a href="https://taughttotrade.gumroad.com/l/field-edition?utm_source=site&amp;utm_medium=footer&amp;utm_campaign=privacy" target="_blank" rel="noopener">Free checklist</a></li><li><a href="https://taughttotrade.com/#prices">All prices</a></li></ul></div>
 <div><h3>About</h3><ul><li><a href="https://taughttotrade.com/#principles">How we work</a></li><li><a href="/privacy">Privacy</a></li></ul></div>
 </div>
 <div class="legal"><p>Educational tools only, not investment advice. Trading involves substantial risk of loss. No performance claims. You set your own alerts; nothing here sends buy/sell signals.</p><p>&copy; 2026 Taught to Trade</p></div>

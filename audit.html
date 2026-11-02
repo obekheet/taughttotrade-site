@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0E1526">
+<meta name="description" content="For Pine scripts that compile but behave wrong or change after a reload. An AI model reads every line of one script and writes a report with line numbers. Report $49, or $149 with the fixed code.">
+<link rel="canonical" href="https://taughttotrade.com/audit">
+<title>Pine Script Audit: why your script behaves differently live | Taught to Trade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>:root{--ink:#0e1526;--ink-2:#0a0f1c;--panel:#141e33;--paper:#f5f2ea;--mist:#bdc5d5;--dim:#8b95a8;--blue:#2f6fed;--blue-soft:#8fb0ff;--amber:#e8a13c;--line:rgba(245,242,234,.12);--line-strong:rgba(245,242,234,.28);--max:1180px;--sans:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;--mono:"DM Mono",ui-monospace,Consolas,monospace;color-scheme:dark}
+*{box-sizing:border-box}html{scroll-behavior:smooth;background:var(--ink)}
+body{margin:0;background:var(--ink);color:var(--paper);font:16px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:inherit}a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+h1,h2,h3{font-weight:300;letter-spacing:-.025em;text-wrap:balance}
+.wrap{width:100%;max-width:calc(var(--max) + 64px);margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+@media(min-width:768px){.wrap{padding-left:32px;padding-right:32px}}
+.kicker,.nav a,.btn,.button,.textlink{font-family:var(--mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase}
+.kicker{color:var(--dim);margin:0 0 18px}.kicker a{color:var(--dim);text-decoration:none;border-bottom:1px solid var(--line-strong)}.kicker a:hover{color:var(--paper)}
+.announce{margin:0;border-bottom:1px solid var(--line);text-align:center;font:500 .72rem/1.4 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mist);padding:10px 16px}
+.topbar{position:sticky;top:0;z-index:5;background:rgba(14,21,38,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:64px}
+.brand{text-decoration:none;font-weight:600;letter-spacing:-.01em;line-height:1.1}
+.brand small{display:block;font:400 .66rem/1.4 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.nav{display:flex;align-items:center;gap:22px}.nav a{text-decoration:none;color:var(--mist)}.nav a:hover{color:var(--paper)}
+@media(max-width:700px){.nav a:not(.btn):not(.nav-prices){display:none}.nav{gap:16px}}@media(max-width:520px){.brand small,.btn-long{display:none}}@media(max-width:420px){.nav .btn{padding:0 12px}}
+.btn,.button{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:46px;padding:0 20px;border:1px solid var(--line-strong);border-radius:2px;text-decoration:none;color:var(--paper);background:transparent;cursor:pointer;text-align:center}
+.btn:hover,.button:hover{border-color:var(--paper)}
+.btn.primary,.button:not(.secondary){background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.primary:hover,.button:not(.secondary):hover{background:#3f7cf5}
+.textlink{color:var(--paper);text-decoration:none;border-bottom:1px solid var(--line-strong);padding-bottom:3px;white-space:nowrap}.textlink:hover{border-color:var(--paper)}
+.ticks{height:16px;border-bottom:1px solid var(--line-strong);background:repeating-linear-gradient(90deg,var(--line-strong) 0 1px,transparent 1px 100%) left bottom/calc(100% / 12) 14px repeat-x,repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px 100%) left bottom/calc(100% / 60) 6px repeat-x}
+footer{background:var(--ink-2);border-top:1px solid var(--line);padding-block:56px 32px}
+.foot-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:16px;margin-bottom:22px}
+.foot-top .tag{margin:0;font-size:clamp(1.4rem,1.1rem + 1.2vw,2.2rem);font-weight:300;letter-spacing:-.02em}.foot-top .tag em{font-style:normal;color:var(--blue-soft)}
+.cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px 20px;padding-block:34px}
+@media(min-width:900px){.cols{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.cols h3{font:500 .72rem/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin:0 0 14px}
+.cols ul{list-style:none;margin:0;padding:0;display:grid;gap:9px}.cols a{text-decoration:none;color:var(--mist);font-size:.94rem}.cols a:hover{color:var(--paper)}
+.legal{border-top:1px solid var(--line);padding-top:22px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;font:400 .72rem/1.6 var(--mono);color:var(--dim)}.legal p{margin:0;max-width:80ch}
+@media(max-width:640px){.hide-sm{display:none}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}</style>
+<style>
+.article-page{padding-block:clamp(56px,8vw,104px)}
+.article{width:100%;max-width:calc(720px + 2 * 16px);margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.article h1{font-size:clamp(2.4rem,1.7rem + 3vw,4.2rem);line-height:1.04;margin:0 0 34px}
+.article h2{font-size:clamp(1.5rem,1.25rem + 1vw,2.1rem);line-height:1.15;margin:64px 0 18px;padding-top:22px;border-top:1px solid var(--line)}
+.article h3{font-size:1.3rem;margin:36px 0 12px}
+.article p,.article li{color:var(--mist);font-size:1.03rem;line-height:1.8}
+.article p{margin:0 0 22px}.article strong{color:var(--paper);font-weight:600}
+.article a{color:var(--blue-soft)}
+.article ul,.article ol{margin:0 0 28px;padding-left:1.3rem}.article li{margin:0 0 10px;padding-left:4px}
+.article pre{margin:24px 0 30px;padding:18px 20px;overflow-x:auto;border:1px solid var(--line);background:var(--panel);color:var(--paper);font:400 .9rem/1.7 var(--mono);white-space:pre-wrap}
+.article code{font-family:var(--mono);font-size:.92em}
+.article .table-wrap{overflow-x:auto;margin:24px 0 30px}
+.article table{width:100%;border-collapse:collapse;font-size:.94rem}
+.article th,.article td{text-align:left;padding:11px 12px 11px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--mist)}
+.article thead th{font:500 .72rem/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim);border-bottom-color:var(--line-strong)}
+.article .disclaimer{margin-top:46px;color:var(--dim);font-size:.88rem}
+.article-actions{display:flex;flex-wrap:wrap;align-items:center;gap:18px;margin-top:34px}
+.article-actions .back{font-family:var(--mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);text-decoration:none;border-bottom:1px solid var(--line-strong);padding-bottom:3px}
+.article-actions .back:hover{border-color:var(--paper)}
+@media(max-width:520px){.article h2{margin-top:52px}.article-actions .button{width:100%}}
+</style>
+<style>
+.article .also-explained{margin-top:46px;padding-top:24px;border-top:1px solid var(--line)}
+.article .also-explained a{color:var(--paper);text-decoration:none;border-bottom:1px solid var(--blue);padding-bottom:2px}
+.article .also-explained a:hover{color:#8bb0ff}
+</style>
+</head>
+<body>
+<p class="announce"><span class="hide-sm">Free: </span>indicator teardowns, a repaint checker and open-source scripts.<span class="hide-sm"> No buy/sell signals, ever.</span></p>
+<header class="topbar"><div class="wrap"><a class="brand" href="https://taughttotrade.com/">Taught to Trade<small>Systems over signals.</small></a><nav class="nav" aria-label="Primary"><a href="https://taughttotrade.com/#explainers">Explainers</a><a href="https://taughttotrade.com/#scripts">Scripts</a><a class="nav-prices" href="https://taughttotrade.com/#prices">Prices</a><a class="btn primary" href="https://taughttotrade.gumroad.com/l/otnor?utm_source=site&amp;utm_medium=header&amp;utm_campaign=audit" target="_blank" rel="noopener">Subscribe<span class="btn-long"> $19/mo</span></a></nav></div></header>
+<main id="top" class="article-page"><article class="article">
+<p class="kicker"><a href="https://taughttotrade.com/#prices">Prices</a> / Pine Script Audit</p>
+<h1>Your script compiles. So why does it behave differently live?</h1>
+<p>This is for Pine scripts that compile but behave wrong, or change after a reload. You send one script. An AI model reads every line and writes the report. For each problem it finds, the report gives the line numbers and what happens, and most findings also say how to see it on a chart. For $149 you also get the code with those problems changed.</p>
+<p>First, try the free test. Note what the script shows on a few live bars, reload the chart, and compare. If the output changed, it repaints. The free <a href="/repaint-checker">repaint checker</a> can also flag known patterns in seconds.</p>
+<div class="article-actions"><a class="button" href="https://taughttotrade.gumroad.com/l/script-audit?utm_source=site&amp;utm_medium=audit-page&amp;utm_campaign=audit" target="_blank" rel="noopener">Order an audit - from $49</a></div>
+<h2>Who this is for</h2>
+<ul>
+<li>Markers or alerts appear live, then are gone after a reload.</li>
+<li>An alert fired, but the chart shows nothing on that bar.</li>
+<li>A strategy behaves differently live than it did in the backtest.</li>
+<li>An AI wrote your script and you cannot tell whether it does what it says.</li>
+</ul>
+<h2>What you send</h2>
+<p>Checkout asks for a link to your source and a tick to confirm you are allowed to share it.</p>
+<p><strong>Your script does not have to be public.</strong> A secret gist works: go to gist.github.com, paste the code, choose "Create secret gist" and use that link. Anyone with the link can read it, so delete the gist once you have your report.</p>
+<h2>How it works</h2>
+<ol>
+<li><strong>Order.</strong> Paste your link at checkout and pay the deposit.</li>
+<li><strong>Reading and report.</strong> An AI model reads the script and writes the report. You get it within 5 days of ordering.</li>
+<li><strong>Delivery.</strong> The second half is charged when the work is delivered.</li>
+</ol>
+<h2>What you pay, and when</h2>
+<div class="table-wrap"><table><thead><tr><th>Option</th><th>Today (50% deposit)</th><th>On delivery</th><th>Total</th></tr></thead><tbody>
+<tr><td>Report</td><td>$24.50</td><td>$24.50</td><td>$49</td></tr>
+<tr><td>Report and fixed code</td><td>$74.50</td><td>$74.50</td><td>$149</td></tr>
+</tbody></table></div>
+<p>Payment runs through Gumroad. There is no acceptance step before the second charge: it is taken at delivery.</p>
+<h2>What is in scope</h2>
+<ul>
+<li>One script, up to 1,000 lines.</li>
+<li>Code you are allowed to share.</li>
+<li>Not protected, invite-only or closed-source code. If a script is out of scope, we refund the deposit.</li>
+<li>Where it repaints, where its backtest flatters it, and where its logic slips.</li>
+<li>No verdict on whether it makes money, how often it is right, or whether to trade it.</li>
+</ul>
+<h2>Who does the reading</h2>
+<p>An AI model, Claude, reads every line and writes the report. No person reads your code line by line, and your code is sent to that model to do the work.</p>
+<p>The same AI run then compares the line numbers and any quoted code with your source. The report marks which findings were tested and which were only read, so you can tell them apart. Every finding gives its line numbers and what happens, and most also give a way to see it on a chart. Your code and your report stay out of our public repositories.</p>
+<h2>What a report looks like</h2>
+<p>This is a shortened excerpt from an audit we ran on our own open-source script, <a href="https://www.tradingview.com/script/qGydpugy-Taught-to-Trade-Range-Filter-Audit/" target="_blank" rel="noopener">Range Filter Audit</a>. It is our code, not a customer's, and nobody paid for it. The flaw is ours, and the published script still has it.</p>
+<h3>Medium: alerts can fire on a turn that does not survive the bar (lines 94-95)</h3>
+<pre><code>alertcondition(turnUp, "Range filter turned up", "Range Filter Audit: filter turned up on {{ticker}} {{interval}}")
+alertcondition(turnDn, "Range filter turned down", "Range Filter Audit: filter turned down on {{ticker}} {{interval}}")</code></pre>
+<p><strong>What happens.</strong> <code>turnUp</code> and <code>turnDn</code> are recalculated on every live update. The markers on lines 89-92 split this into closed-bar triangles and open-bar circles. The alerts do not. With the alert frequency set to "Once per bar", an alert can fire on an open-bar turn and the bar can then close with no turn. Our published description tells users to pick "Once per bar close", but nothing in the code enforces it.</p>
+<p><strong>How to see it on a chart.</strong> Add the script to a 1-minute chart while the market is open and create an alert with "Once per bar". Wait for a grey circle that disappears before the bar closes. You should then see an entry in the alert log and no triangle on that bar.</p>
+<p><strong>Suggested change.</strong> Add <code>and barstate.isconfirmed</code> to both conditions, or offer a separate open-bar alert with a title that says so.</p>
+<p>This finding comes from reading the code. We did not test it on a chart. Other findings were tested on a Python port with synthetic data.</p>
+<h2>Where this fails</h2>
+<ul>
+<li>It finds problems in the code it can read. It cannot prove a script is safe, and a clean section does not mean nothing is wrong.</li>
+<li>If the audit finds nothing, the report says so and lists what was checked. That is not proof either.</li>
+<li>It covers the code at the link you send. A later edit is not covered.</li>
+<li>It cannot see closed-source libraries, your chart settings, your data feed or your broker.</li>
+<li>AI reading can miss things or misjudge them. You can check any finding against your code by its line numbers, and most also say how to see it on a chart. No report can show you what it missed.</li>
+<li>Fixed code changes the problems named in the report and nothing else. It has not been run live, it can still have problems the report missed, and we have no sample of this option yet.</li>
+<li>It does not test whether a script makes money, and it gives no trade advice.</li>
+</ul>
+<div class="article-actions"><a class="button" href="https://taughttotrade.gumroad.com/l/script-audit?utm_source=site&amp;utm_medium=audit-page&amp;utm_campaign=audit" target="_blank" rel="noopener">Order an audit - from $49</a><a class="back" href="https://taughttotrade.com/#prices">All prices</a></div>
+<p class="disclaimer"><em>Educational content only. Not financial advice. Nothing here is a recommendation to buy or sell anything.</em></p>
+</article></main>
+<footer><div class="wrap">
+<div class="foot-top"><a class="brand" href="https://taughttotrade.com/">Taught to Trade<small>Systems over signals.</small></a><p class="tag">The machine shop, <em>not the treasure map.</em></p></div>
+<div class="ticks" aria-hidden="true"></div>
+<div class="cols">
+<div><h3>Read</h3><ul><li><a href="/repaint-checker">Repaint checker</a></li><li><a href="/repainting">What is repainting?</a></li><li><a href="/tradingview-backtest-accuracy">Is backtesting accurate?</a></li><li><a href="https://taughttotrade.com/#explainers">All explainers</a></li></ul></div>
+<div><h3>Scripts</h3><ul><li><a href="https://www.tradingview.com/u/taughttotrade/" target="_blank" rel="noopener">On TradingView</a></li><li><a href="https://github.com/obekheet/pine-script-indicators" target="_blank" rel="noopener">Code on GitHub</a></li><li><a href="https://taughttotrade.com/#scripts">All scripts</a></li></ul></div>
+<div><h3>Shop</h3><ul><li><a href="https://taughttotrade.gumroad.com/l/otnor?utm_source=site&amp;utm_medium=footer&amp;utm_campaign=audit" target="_blank" rel="noopener">Teardown Letter</a></li><li><a href="https://taughttotrade.gumroad.com/l/field-edition?utm_source=site&amp;utm_medium=footer&amp;utm_campaign=audit" target="_blank" rel="noopener">Free checklist</a></li><li><a href="https://taughttotrade.com/#prices">All prices</a></li></ul></div>
+<div><h3>About</h3><ul><li><a href="https://taughttotrade.com/#principles">How we work</a></li><li><a href="/privacy">Privacy</a></li></ul></div>
+</div>
+<div class="legal"><p>Educational tools only, not investment advice. Trading involves substantial risk of loss. No performance claims. You set your own alerts; nothing here sends buy/sell signals.</p><p>&copy; 2026 Taught to Trade</p></div>
+</div></footer>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "e0f6d58dfdf749eb83ae8e75100eb65c"}'></script><!-- End Cloudflare Web Analytics -->
+</body>
+</html>

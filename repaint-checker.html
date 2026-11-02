@@ -25,7 +25,7 @@ h1,h2,h3{font-weight:300;letter-spacing:-.025em;text-wrap:balance}
 .brand{text-decoration:none;font-weight:600;letter-spacing:-.01em;line-height:1.1}
 .brand small{display:block;font:400 .66rem/1.4 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
 .nav{display:flex;align-items:center;gap:22px}.nav a{text-decoration:none;color:var(--mist)}.nav a:hover{color:var(--paper)}
-@media(max-width:700px){.nav a:not(.btn){display:none}}
+@media(max-width:700px){.nav a:not(.btn):not(.nav-prices){display:none}.nav{gap:16px}}@media(max-width:520px){.brand small,.btn-long{display:none}}@media(max-width:420px){.nav .btn{padding:0 12px}}
 .btn,.button{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:46px;padding:0 20px;border:1px solid var(--line-strong);border-radius:2px;text-decoration:none;color:var(--paper);background:transparent;cursor:pointer;text-align:center}
 .btn:hover,.button:hover{border-color:var(--paper)}
 .btn.primary,.button:not(.secondary){background:var(--blue);border-color:var(--blue);color:#fff}
@@ -72,7 +72,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--line);padding-block:56
 </head>
 <body>
 <p class="announce"><span class="hide-sm">Free: </span>indicator teardowns, a repaint checker and open-source scripts.<span class="hide-sm"> No buy/sell signals, ever.</span></p>
-<header class="topbar"><div class="wrap"><a class="brand" href="https://taughttotrade.com/">Taught to Trade<small>Systems over signals.</small></a><nav class="nav" aria-label="Primary"><a href="https://taughttotrade.com/#explainers">Explainers</a><a href="https://taughttotrade.com/#scripts">Scripts</a><a href="https://taughttotrade.com/#prices">Prices</a><a class="btn primary" href="https://taughttotrade.gumroad.com/l/otnor" target="_blank" rel="noopener">Subscribe $19/mo</a></nav></div></header>
+<header class="topbar"><div class="wrap"><a class="brand" href="https://taughttotrade.com/">Taught to Trade<small>Systems over signals.</small></a><nav class="nav" aria-label="Primary"><a href="https://taughttotrade.com/#explainers">Explainers</a><a href="https://taughttotrade.com/#scripts">Scripts</a><a class="nav-prices" href="https://taughttotrade.com/#prices">Prices</a><a class="btn primary" href="https://taughttotrade.gumroad.com/l/otnor?utm_source=site&amp;utm_medium=header&amp;utm_campaign=repaint-checker" target="_blank" rel="noopener">Subscribe<span class="btn-long"> $19/mo</span></a></nav></div></header>
 <main id="top" class="article-page"><article class="article">
 <p class="kicker"><a href="https://taughttotrade.com/#explainers">Free tools</a> / Repaint checker</p>
 <style>
@@ -99,17 +99,18 @@ footer{background:var(--ink-2);border-top:1px solid var(--line);padding-block:56
 <p>A script repaints when what it shows on past bars is not what it showed, or would have shown, while those bars were live. The history looks cleaner than anything you could have traded, because the marks that appeared and then vanished are gone. TradingView's manual sorts the causes into three groups: values calculated on bars that have not closed yet, things drawn on bars earlier than the one where they became known, and changes in the data itself.</p>
 <h2>What the checker looks for</h2>
 <ul>
-<li><strong>Future leak (high):</strong> <code>request.security()</code> with <code>lookahead = barmerge.lookahead_on</code> and no <code>[1]</code> offset. History then shows higher-timeframe values before they existed. TradingView calls this "dangerously misleading", and publications that use it are moderated.</li>
-<li><strong>Unconfirmed higher-timeframe values (medium):</strong> <code>request.security()</code> without an offset. Live, the daily value keeps changing until the day closes; on history you only see the final one. The documented fix is <code>close[1]</code> with <code>lookahead_on</code>, used together.</li>
+<li><strong>Future leak (high):</strong> <code>request.security()</code> with <code>lookahead = barmerge.lookahead_on</code> and no <code>[1]</code> offset, or with a plain series beside an offset one, such as <code>high - low[1]</code>. History then shows higher-timeframe values before they existed. TradingView calls this "dangerously misleading", and publications that use it are moderated.</li>
+<li><strong>Unconfirmed higher-timeframe values (medium):</strong> <code>request.security()</code> without an offset. Live, the daily value keeps changing until the day closes; on history you only see the final one. The documented fix is <code>close[1]</code> with <code>lookahead_on</code>, used together. A request on <code>timeframe.period</code> stays on the chart timeframe, so these two rules do not apply and it gets a low note instead.</li>
 <li><strong>Live-only state (medium):</strong> <code>varip</code>, <code>timenow</code>, <code>barstate.isnew</code> and <code>calc_on_every_tick = true</code> all behave differently on live bars than on history.</li>
 <li><strong>Plotting in the past (medium):</strong> negative <code>offset</code> values, and pivot labels placed on <code>bar_index[n]</code>. A pivot is known only after its right-side bars close, but it is drawn on the pivot bar.</li>
 <li><strong>Synthetic prices (medium):</strong> <code>ticker.heikinashi()</code>, Renko and similar. Strategies filling on them fill at prices that never traded.</li>
+<li><strong>Check by hand (low):</strong> an offset that sits inside a call, such as <code>nz(close[1])</code>, or in a variable or a function of the script, a plot offset held in a variable, <code>request.security_lower_tf()</code>, and drawings moved or rebuilt on the latest bar. These can be fine or can be a real leak. A text scan cannot tell, so each is flagged for you to read.</li>
 <li><strong>Unconfirmed signals (low):</strong> crosses feeding alerts or shapes without <code>barstate.isconfirmed</code>. A marker can appear on the live bar and disappear before the close.</li>
 </ul>
 <h2>Where it fails</h2>
 <ul>
 <li>It reads text, it does not run the code. A pattern inside a function that is never called still gets flagged, and a repaint built from unusual code can be missed.</li>
-<li>A clean result means none of these patterns was found. It does not prove the script never repaints.</li>
+<li>No flags means none of these patterns was found. It does not prove the script is safe or that it never repaints.</li>
 <li>Some flagged patterns are harmless where they are used, for example <code>barstate.islast</code> to draw a table. Read the reason before judging the script.</li>
 <li>It cannot check closed-source or invite-only scripts, because their code is not visible. For those, watch the script live for a few bars and compare with what history shows after a reload.</li>
 <li>Data revisions and a different first bar can change past values in any script. No text check can see that.</li>
@@ -142,11 +143,11 @@ footer{background:var(--ink-2);border-top:1px solid var(--line);padding-block:56
 <script>
 (function(){var s=document.currentScript.parentNode,f=s.querySelector('form'),d=s.querySelector('.tt-signup-done');
 f.addEventListener('submit',function(e){e.preventDefault();var b=f.querySelector('button');b.disabled=true;
-fetch(f.action,{method:'POST',body:new FormData(f),mode:'no-cors'}).then(function(){f.hidden=true;d.hidden=false;}).catch(function(){f.submit();});});})();
+fetch(f.action,{method:'POST',body:new FormData(f),mode:'no-cors'}).then(function(){f.hidden=true;d.hidden=false;var u=location.pathname+location.search+location.hash;try{history[window.navigation?'replaceState':'pushState'](history.state,'',location.pathname.replace(/\/$/,'')+'/signup');history.replaceState(history.state,'',u);}catch(e){}}).catch(function(){f.submit();});});})();
 </script>
 </section>
-<p class="also-explained audit-offer">Want every line read, not just pattern-matched? <a href="https://taughttotrade.gumroad.com/l/script-audit" target="_blank" rel="noopener">A Pine Script Audit</a> is $49 for the report, or $149 with fixed code. It cannot prove a script is safe either, but it covers logic this scan cannot see.</p>
-<div class="article-actions"><a class="button" href="https://taughttotrade.gumroad.com/l/otnor" target="_blank" rel="noopener">Subscribe to the Teardown Letter: $19/mo</a><a class="back" href="https://taughttotrade.com/">Back to Taught to Trade</a><p style="flex-basis:100%;margin:0;font-size:.9rem;color:var(--muted,inherit)">No TradingView account yet? <a href="https://www.tradingview.com/?aff_id=1173690" target="_blank" rel="sponsored noopener">This affiliate link</a> gives you a $15 coupon toward a paid plan, and we earn a commission if you buy one. The free plan is enough to follow this page.</p></div>
+<p class="also-explained audit-offer">Script compiles but behaves differently live, or changes after a reload? In a <a href="/audit">Pine Script Audit</a>, an AI model reads every line and writes a report on what to fix for $49, or also fixes those problems for $149. It cannot prove a script is safe either, but it covers logic this scan cannot see. <a href="https://taughttotrade.gumroad.com/l/script-audit?utm_source=site&amp;utm_medium=checker-static&amp;utm_campaign=repaint-checker" target="_blank" rel="noopener">Order an audit</a></p>
+<div class="article-actions"><a class="button" href="https://taughttotrade.gumroad.com/l/otnor?utm_source=site&amp;utm_medium=nextstep&amp;utm_campaign=repaint-checker" target="_blank" rel="noopener">Subscribe to the Teardown Letter: $19/mo</a><a class="back" href="https://taughttotrade.com/">Back to Taught to Trade</a><p style="flex-basis:100%;margin:0;font-size:.9rem;color:var(--muted,inherit)">No TradingView account yet? <a href="https://www.tradingview.com/?aff_id=1173690" target="_blank" rel="sponsored noopener">This affiliate link</a> gives you a $15 coupon toward a paid plan, and we earn a commission if you buy one. The free plan is enough to follow this page.</p></div>
 <script>
 // Repaint risk checker for Pine Script. Static text scan; runs entirely in the browser.
 function rrStrip(src){
@@ -174,6 +175,106 @@ function rrCallArgs(s,open){
   if(cur.trim())args.push(cur.trim());
   return {args,end:i};
 }
+function rrMatch(e,i){
+  // e[i] is an opening bracket; returns the index of its partner, or -1.
+  let d=0;
+  for(;i<e.length;i++){
+    if(e[i]==='('||e[i]==='[')d++;
+    else if(e[i]===')'||e[i]===']'){d--;if(d===0)return i;}
+  }
+  return -1;
+}
+function rrTopSplit(e,seps){
+  // Split on any of seps at bracket depth 0.
+  const out=[];let d=0,cur='',i=0;
+  while(i<e.length){
+    const c=e[i];
+    if(c==='('||c==='[')d++;else if(c===')'||c===']')d--;
+    if(d===0){
+      const m=seps.exec(e.slice(i));
+      if(m&&m[0].length&&!(/^[a-z]/.test(m[0])&&/\w/.test(e[i-1]||''))){out.push(cur);cur='';i+=m[0].length;continue;}
+    }
+    cur+=c;i++;
+  }
+  out.push(cur);
+  return out.map(x=>x.trim()).filter(Boolean);
+}
+const RR_OPS=/^(?:\?|:=?|==|!=|>=|<=|>|<|\+|-|\*|\/|%|and\b|or\b|not\b)/;
+function rrMerge(kinds){
+  // Bare numbers and na carry no series, so they do not count against an offset.
+  const k=kinds.filter(x=>x!=='const');
+  if(k.length&&k.every(x=>x==='whole'))return 'whole';
+  if(k.every(x=>x==='none'))return 'none';
+  if(k.every(x=>x==='whole'||x==='variable'))return 'variable';
+  return 'part';
+}
+function rrOffsetKind(expr){
+  // 'whole': every series in the expression carries a literal [n], n >= 1.
+  // 'none': nothing in it is offset. 'part': only some of it is. 'variable': the offset depends on a variable.
+  let e=expr.trim();
+  while(e[0]==='('&&rrMatch(e,0)===e.length-1)e=e.slice(1,-1).trim();
+  if(/^(?:\d+\.?\d*|\.\d+|na|true|false)$/.test(e))return 'const';
+  if(!e.includes('['))return 'none';
+  if(e[0]==='['&&rrMatch(e,0)===e.length-1)return rrMerge(rrTopSplit(e.slice(1,-1),/^,/).map(rrOffsetKind));
+  const ops=rrTopSplit(e,RR_OPS);
+  if(ops.length>1||ops[0]!==e)return rrMerge(ops.map(rrOffsetKind));
+  // One operand: a name, call or (group), then an optional [k].
+  const m=e.match(/\[([^\[\]]*)\]$/);
+  if(!m||rrMatch(e,e.length-m[0].length)!==e.length-1)return 'part';
+  const k=m[1].trim();
+  if(/^[1-9]\d*$/.test(k))return 'whole';
+  if(/^0+$/.test(k))return e.slice(0,-m[0].length).includes('[')?'part':'none';
+  return 'variable';
+}
+const RR_MEMO=new Map();
+function rrAssigned(s,name){
+  // The right-hand side of every assignment to name, including :=, typed declarations and +=.
+  const re=new RegExp('^[ \\t]*(?:(?:var|varip|float|int|bool|string|color|series|simple|const)\\s+)*'+name+'\\s*[-+*/%:]?=(?!=)[ \\t]*(.*)$','gm');
+  const out=[];let a;
+  while((a=re.exec(s)))out.push(a[1].trim());
+  // Tuple destructuring: [a, b] = f()
+  const tup=new RegExp('^[ \\t]*\\[[^\\]\\n]*\\b'+name+'\\b[^\\]\\n]*\\]\\s*:?=(?!=)[ \\t]*(.*)$','gm');
+  while((a=tup.exec(s)))out.push(a[1].trim());
+  return out;
+}
+function rrResolveKind(s,expr,seen){
+  // rrOffsetKind, then follows variables and one-line functions defined in the file.
+  // Anything that cannot be followed is 'variable', so it is flagged for the reader and never comes back clean.
+  const direct=rrOffsetKind(expr);
+  if(direct!=='none')return direct;
+  if(!seen)RR_MEMO.clear(); // one memo per top-level lookup, so a long chain of names stays linear
+  seen=seen||[];
+  let e=expr.trim();
+  while(e[0]==='('&&rrMatch(e,0)===e.length-1)e=e.slice(1,-1).trim();
+  const parts=e[0]==='['&&rrMatch(e,0)===e.length-1?rrTopSplit(e.slice(1,-1),/^,/):rrTopSplit(e,RR_OPS);
+  if(parts.length>1||parts[0]!==e)return rrMerge(parts.map(p=>rrResolveKind(s,p,seen)));
+  const m=e.match(/^([A-Za-z_]\w*)\s*\(/);
+  if(m&&rrMatch(e,m[0].length-1)===e.length-1){
+    const def=new RegExp('^[ \\t]*(?:export\\s+)?(?:[\\w.<>\\[\\]]+\\s+)*?'+m[1]+'\\s*\\([^\\n]*?\\)\\s*=>[ \\t]*(.*)$','m').exec(s);
+    if(!def)return 'none'; // a built-in such as nz()
+    const body=def[1].trim();
+    if(!body||seen.includes(m[1]))return 'variable';
+    if(RR_MEMO.has(m[1]+'()'))return RR_MEMO.get(m[1]+'()');
+    const fk=rrResolveKind(s,body,seen.concat(m[1]))==='none'?'none':'variable';
+    RR_MEMO.set(m[1]+'()',fk);
+    return fk;
+  }
+  if(!/^[A-Za-z_]\w*$/.test(e))return 'none';
+  const rhs=rrAssigned(s,e);
+  if(!rhs.length)return 'none';
+  if(seen.includes(e))return 'variable';
+  if(RR_MEMO.has(e))return RR_MEMO.get(e);
+  const k=rrMerge(rhs.map(r=>!r||/^(?:if|switch)\b/.test(r)?'variable':rrResolveKind(s,r,seen.concat(e))));
+  const kind=k==='none'?'none':'variable';
+  RR_MEMO.set(e,kind);
+  return kind;
+}
+function rrBareSeries(expr){
+  // True when a built-in series sits in the expression with no call around it and no [n] after it.
+  let e=expr.replace(/\[\s*0+\s*\]/g,''),p;
+  do{p=e;e=e.replace(/[A-Za-z_][\w.]*\s*\([^()]*\)|[A-Za-z_][\w.]*\s*\[[^\[\]()]*\]|\([^()]*\)\s*\[[^\[\]()]*\]/g,'#');}while(e!==p);
+  return /(^|[^\w.#])(?:open|high|low|close|volume|hl2|hlc3|ohlc4|hlcc4)\b(?![\w.(])/.test(e);
+}
 function rrCheck(src){
   const s=rrStrip(src),F=[];
   const add=(level,line,title,why,fix)=>F.push({level,line,title,why,fix});
@@ -186,14 +287,30 @@ function rrCheck(src){
     args.forEach(a=>{const k=a.match(/^([a-z_]+)\s*=(?!=)\s*([\s\S]*)$/);if(k)named[k[1]]=k[2].trim();else pos.push(a);});
     const expr=(named.expression!==undefined?named.expression:pos[2])||'';
     const look=(named.lookahead!==undefined?named.lookahead:pos[4])||'';
-    const offset=/\[\s*[1-9]\d*\s*\]\s*$/.test(expr)||/\[\s*[1-9]\d*\s*\]/.test(expr);
-    if(/lookahead_on/.test(look)){
-      if(!offset)add('high',line,'Future leak: lookahead_on without a [1] offset',
+    const tf=((named.timeframe!==undefined?named.timeframe:pos[1])||'').trim();
+    if(tf==='timeframe.period'){
+      add('low',line,'Request stays on the chart timeframe',
+        'There is no higher-timeframe bar here to wait for, so the higher-timeframe rules do not apply. If the requested symbol trades different hours from the chart, its bars may not line up with yours.',
+        'For another symbol, compare its session hours with the chart. For the same symbol, read the series directly.');
+      continue;
+    }
+    const kind=rrResolveKind(s,expr);
+    if(kind==='part'&&/lookahead_on/.test(look)&&rrBareSeries(expr)){
+      add('high',line,'Future leak: part of this request has no [1] offset',
+        'With lookahead_on, the series here with no offset returns the higher-timeframe value before that bar has closed, even though another part is offset. The history looks better than anything you could have seen live.',
+        'Offset the whole expression, for example (high - low)[1], or give each series its own [1], and keep lookahead_on.');
+    }else if(kind==='part'||kind==='variable'){
+      add('low',line,'Check by hand: this offset may not cover the whole request',
+        kind==='part'?'Only part of this expression is offset, so the rest can still read the unfinished higher-timeframe bar'+(/lookahead_on/.test(look)?', and with lookahead_on that can be a future leak':'')+'. A pattern scan cannot tell which parts matter.'
+          :'The offset here is held in a variable or set elsewhere, so a text scan cannot see its value. If it can be 0, the request is not offset at all.',
+        'Offset the whole expression, for example (high - low)[1], or give each series its own [1]. Then compare the script live with a reload.');
+    }else if(/lookahead_on/.test(look)){
+      if(kind==='none')add('high',line,'Future leak: lookahead_on without a [1] offset',
         'On historical bars this returns the higher-timeframe value before that bar has closed. The history looks better than anything you could have seen live.',
         'Offset the expression by one bar and keep lookahead_on: request.security(sym, tf, close[1], lookahead = barmerge.lookahead_on).');
       else add('ok',line,'Higher-timeframe request with [1] + lookahead_on',
-        'This is the pattern TradingView documents for non-repainting higher-timeframe values.','Nothing to change.');
-    }else if(!offset){
+        'This matches the pattern TradingView documents for higher-timeframe values.','No known patterns found on this line, which does not prove it is safe.');
+    }else if(kind==='none'){
       add('medium',line,'request.security() without an offset',
         'On realtime bars it returns the unconfirmed higher-timeframe value, which keeps changing until that bar closes. Historical bars show only final values, so live and history disagree.',
         'Use the documented pattern: expression[1] with lookahead = barmerge.lookahead_on. If the timeframe may be lower than the chart, use request.security_lower_tf() instead.');
@@ -203,6 +320,11 @@ function rrCheck(src){
         'Pair the [1] offset with lookahead = barmerge.lookahead_on.');
     }
   }
+  // 2b. Lower-timeframe requests (low: often fine, but the rule above does not see them)
+  const ltRe=/\brequest\.security_lower_tf\s*\(/g;
+  while((m=ltRe.exec(s)))add('low',rrLine(s,m.index),'request.security_lower_tf()',
+    'This returns the intrabar values of each chart bar. How much intrabar history exists depends on the plan and the timeframe, so older bars can hold less data than recent ones, and the live bar keeps gaining values until it closes.',
+    'Use it on closed bars only, and check how many intrabars older bars actually return.');
   // 3. varip
   const vRe=/(^|[^.\w])varip\b/g;
   while((m=vRe.exec(s)))add('medium',rrLine(s,m.index+m[1].length),'varip variable',
@@ -232,14 +354,28 @@ function rrCheck(src){
   while((m=oRe.exec(s)))add('medium',rrLine(s,m.index),'Negative plot offset',
     'The value is drawn on an earlier bar than the one where it became known. On history it looks on time; live it appears late.',
     'Plot without the offset by default, and make plotting in the past an input that is off.');
+  // 7b. Offset held in a variable: a named offset argument whose sign a text scan cannot see (low)
+  const ovRe=/\boffset\s*=\s*([A-Za-z_][\w.]*)(?![\w.]*\s*\()/g;
+  while((m=ovRe.exec(s))){
+    const before=s.slice(0,m.index).replace(/\s+$/,'').slice(-1);
+    if((before===','||before==='(')&&!/^(?:true|false|na)$/.test(m[1]))add('low',rrLine(s,m.index),'Plot offset held in a variable',
+      'A negative value draws on bars earlier than the one where the value was known, and a text scan cannot see what this variable holds.',
+      'Check the value. If it is negative, it behaves like a negative plot offset: make plotting in the past an input that is off.');
+  }
   const pRe=/\bta\.pivot(high|low)\s*\(/g;let piv=false;
   while((m=pRe.exec(s))){piv=true;add('low',rrLine(s,m.index),'ta.pivot'+m[1]+'()',
     'A pivot is confirmed only after the right-side bars have closed. Fine on its own, but drawing it back on the pivot bar makes it look earlier than it was.',
     'Draw the marker on the confirmation bar, or label it clearly as drawn in the past.');}
-  if(piv){const bRe2=/\b(?:label\.new|line\.new|box\.new)\s*\(\s*(?:x1\s*=\s*|x\s*=\s*)?bar_index\s*\[|\bbar_index\s*-\s*\w+/g;
+  if(piv){const bRe2=/\b(?:label\.new|line\.new|box\.new)\s*\(\s*(?:x1\s*=\s*|x\s*=\s*)?bar_index\s*(?:\[|-\s*\w)/g;
     while((m=bRe2.exec(s)))add('medium',rrLine(s,m.index),'Drawing placed on a past bar',
       'Combined with pivots, this puts the marker on a bar before the one where it was confirmed.',
       'Place it on the current bar by default; make "plot in the past" an input that is off.');}
+  // 7c. Drawings moved, deleted or rebuilt on the latest bar (low, one finding per script)
+  const reRe=/\.set_(?:xy[12]?|x[12]?|y[12]?|left|right|top|bottom|lefttop|rightbottom)\s*\(|\b(?!table\b|map\b)\w+\.delete\s*\(/g;
+  const re1=reRe.exec(s),isl=/\bbarstate\.islast\b/.test(s),nw=isl?/\b(?:label|line|box|polyline)\.new\s*\(/.exec(s):null;
+  if(re1||nw)add('low',rrLine(s,(re1||nw).index),'Drawings moved or rebuilt after they were placed',
+    'Lines, labels and boxes that are moved, deleted or rebuilt on the latest bar keep no history. A finished chart can then look better than it did live, and a kernel or zigzag redrawn this way can change its past without any of the other patterns here.',
+    'Screenshot the chart live and compare after a reload. If a signal depends on these drawings, base it on a plotted series instead.');
   // 8. Synthetic chart prices
   const hRe=/\bticker\.(heikinashi|renko|kagi|linebreak|pointfigure)\s*\(/g;
   while((m=hRe.exec(s)))add('medium',rrLine(s,m.index),'Synthetic chart data (ticker.'+m[1]+')',
@@ -269,13 +405,23 @@ function run(){
   var src=document.getElementById('rr-src').value,out=document.getElementById('rr-out');
   if(!src.trim()){out.innerHTML='<p class="sum">Paste some Pine Script first.</p>';return;}
   var f=rrCheck(src),c={high:0,medium:0,low:0,ok:0};f.forEach(function(x){c[x.level]++;});
-  var h='<p class="sum">'+c.high+' high · '+c.medium+' medium · '+c.low+' low'+(c.ok?' · '+c.ok+' safe pattern':'')+'</p>';
-  if(!f.length)h+='<div class="find ok"><h3><span class="lv">clean</span>None of the documented repaint patterns found</h3><p>That is not proof it never repaints. See "Where it fails" below.</p></div>';
-  f.forEach(function(x){h+='<div class="find '+x.level+'"><h3><span class="lv">'+x.level+(x.line?' · line '+x.line:'')+'</span>'+esc(x.title)+'</h3><p>'+esc(x.why)+'</p><p><strong>Fix:</strong> '+esc(x.fix)+'</p></div>';});
-  if(c.high+c.medium>0)h+='<p class="sum audit-offer">A pattern scan reads single lines. It cannot follow how a flagged value flows into your entries, exits and alerts. A <a href="https://taughttotrade.gumroad.com/l/script-audit" target="_blank" rel="noopener">Pine Script Audit</a> reads every line by hand and shows what each finding changes on a chart ($49 report, $149 with fixed code).</p>';
+  var h='<p class="sum">'+c.high+' high · '+c.medium+' medium · '+c.low+' low'+(c.ok?' · '+c.ok+' documented pattern':'')+'</p>';
+  if(!f.length)h+='<div class="find ok"><h3><span class="lv">no flags</span>No known patterns found, which does not prove it is safe</h3><p>This scan reads text for known patterns only. To test the script itself, compare it live with a reload. See "Where it fails" below.</p></div>';
+  f.forEach(function(x){h+='<div class="find '+x.level+'"><h3><span class="lv">'+x.level+(x.line?' · line '+x.line:'')+'</span>'+esc(x.title)+'</h3><p>'+esc(x.why)+'</p><p>'+(x.level==='ok'?'':'<strong>Fix:</strong> ')+esc(x.fix)+'</p></div>';});
+  if(c.high+c.medium>0)h+='<p class="sum audit-offer">To see whether this matters, compare the script live with a reload: if the output changes, it repaints. In a <a href="/audit">Pine Script Audit</a>, an AI model reads every line and writes a report with line numbers and, for most findings, how to see it on a chart ($49), or also fixes those problems ($149). A pattern scan cannot follow a flagged value into your entries, exits and alerts. <a href="https://taughttotrade.gumroad.com/l/script-audit?utm_source=site&amp;utm_medium=checker-result&amp;utm_campaign=repaint-checker" target="_blank" rel="noopener">Order an audit</a></p>';
   out.innerHTML=h;
 }
-document.getElementById('rr-go').addEventListener('click',run);
+var rrCounted=false;
+document.getElementById('rr-go').addEventListener('click',function(){
+  run();
+  // Anonymous run count: one virtual page view per page load, on a Check press only. The script text is never sent.
+  // The URL is put back at once, so a reload cannot land on a path that does not exist.
+  // With the Navigation API a replaceState is enough to count, and it leaves no dead Back press. Older browsers need the pushState.
+  if(rrCounted||!document.getElementById('rr-src').value.trim()||!window.history||!history.pushState)return;
+  rrCounted=true;
+  var here=location.pathname+location.search+location.hash;
+  try{history[window.navigation?'replaceState':'pushState'](history.state,'',location.pathname.replace(/\/$/,'')+'/ran');}finally{history.replaceState(history.state,'',here);}
+});
 document.getElementById('rr-demo').addEventListener('click',function(){document.getElementById('rr-src').value=DEMO;run();});
 })();
 </script>
@@ -287,7 +433,7 @@ document.getElementById('rr-demo').addEventListener('click',function(){document.
 <div class="cols">
 <div><h3>Read</h3><ul><li><a href="/repaint-checker">Repaint checker</a></li><li><a href="/repainting">What is repainting?</a></li><li><a href="/tradingview-backtest-accuracy">Is backtesting accurate?</a></li><li><a href="https://taughttotrade.com/#explainers">All explainers</a></li></ul></div>
 <div><h3>Scripts</h3><ul><li><a href="https://www.tradingview.com/u/taughttotrade/" target="_blank" rel="noopener">On TradingView</a></li><li><a href="https://github.com/obekheet/pine-script-indicators" target="_blank" rel="noopener">Code on GitHub</a></li><li><a href="https://taughttotrade.com/#scripts">All scripts</a></li></ul></div>
-<div><h3>Shop</h3><ul><li><a href="https://taughttotrade.gumroad.com/l/otnor" target="_blank" rel="noopener">Teardown Letter</a></li><li><a href="https://taughttotrade.gumroad.com/l/field-edition" target="_blank" rel="noopener">Free checklist</a></li><li><a href="https://taughttotrade.com/#prices">All prices</a></li></ul></div>
+<div><h3>Shop</h3><ul><li><a href="https://taughttotrade.gumroad.com/l/otnor?utm_source=site&amp;utm_medium=footer&amp;utm_campaign=repaint-checker" target="_blank" rel="noopener">Teardown Letter</a></li><li><a href="https://taughttotrade.gumroad.com/l/field-edition?utm_source=site&amp;utm_medium=footer&amp;utm_campaign=repaint-checker" target="_blank" rel="noopener">Free checklist</a></li><li><a href="https://taughttotrade.com/#prices">All prices</a></li></ul></div>
 <div><h3>About</h3><ul><li><a href="https://taughttotrade.com/#principles">How we work</a></li><li><a href="/privacy">Privacy</a></li></ul></div>
 </div>
 <div class="legal"><p>Educational tools only, not investment advice. Trading involves substantial risk of loss. No performance claims. You set your own alerts; nothing here sends buy/sell signals.</p><p>&copy; 2026 Taught to Trade</p></div>

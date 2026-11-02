@@ -37,6 +37,7 @@ Every explainer is written from the indicator's published open-source Pine code.
 ## Tools
 
 - [Does this indicator repaint? Free Pine Script repaint checker](https://taughttotrade.com/repaint-checker): Free repaint checker for TradingView Pine Script. Paste any open-source script to find lookahead, request.security, varip and plot-offset repaint risks, with the documented fix. Runs in your browser.
+- [Pine Script Audit](https://taughttotrade.com/audit): Paid audit for Pine scripts that compile but behave wrong or change after a reload. An AI model reads every line of one script and writes a report with line numbers. Optional fixed code, and a shortened excerpt from a real sample. Where it fails is stated on the page.
 
 ## Optional
 
