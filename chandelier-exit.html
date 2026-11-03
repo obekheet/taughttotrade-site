@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0E1526">
-<meta name="description" content="How the Chandelier Exit indicator on TradingView actually works, why its default uses closes instead of highs, what each setting does, how it differs from Supertrend, and whether it repaints.">
+<meta name="description" content="Chandelier Exit by everget on TradingView, read from its source: why the default uses closes instead of highs, what each setting does, how it differs from Supertrend, and whether it repaints.">
 <link rel="canonical" href="https://taughttotrade.com/chandelier-exit">
-<title>Chandelier Exit (everget) explained: the formula, settings, vs Supertrend, and repainting | Taught to Trade</title>
+<title>Chandelier Exit by everget: the formula, settings, vs Supertrend, and repainting | Taught to Trade</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -75,7 +75,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--line);padding-block:56
 <header class="topbar"><div class="wrap"><a class="brand" href="https://taughttotrade.com/">Taught to Trade<small>Systems over signals.</small></a><nav class="nav" aria-label="Primary"><a href="https://taughttotrade.com/#explainers">Explainers</a><a href="https://taughttotrade.com/#scripts">Scripts</a><a class="nav-prices" href="https://taughttotrade.com/#prices">Prices</a><a class="btn primary" href="https://taughttotrade.gumroad.com/l/otnor?utm_source=site&amp;utm_medium=header&amp;utm_campaign=chandelier-exit" target="_blank" rel="noopener">Subscribe<span class="btn-long"> $19/mo</span></a></nav></div></header>
 <main id="top" class="article-page"><article class="article">
 <p class="kicker"><a href="https://taughttotrade.com/#explainers">Explainers</a> / Chandelier Exit</p>
-<h1>Chandelier Exit, explained from its source</h1>
+<h1>Chandelier Exit by everget, explained from its source</h1>
 <p>The Chandelier Exit by everget is one of the most-used free indicators on TradingView, with about a million views. It draws a trailing stop line under price in an uptrend and over price in a downtrend, and flips between the two. This page explains it from the published source code, including one default most formula pages get wrong: <strong>out of the box it hangs the stop from the highest close, not the highest high.</strong></p>
 <h2>The formula</h2>
 <p>Two lines are calculated on every bar. Only one is drawn at a time.</p>
