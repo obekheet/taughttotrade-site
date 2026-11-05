@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0E1526">
-<meta name="description" content="UT Bot Alerts, from its open-source code: an ATR trailing stop on the close. What Key Value, ATR Period and the Heikin Ashi option change, and when it repaints.">
+<meta name="description" content="UT Bot Alerts by QuantNomad, read from its open-source code: an ATR trailing stop on the close. What Key Value, ATR Period and the Heikin Ashi option change, and when it repaints.">
 <link rel="canonical" href="https://taughttotrade.com/ut-bot-alerts">
-<title>UT Bot Alerts explained: key value, ATR period, repainting | Taught to Trade</title>
+<title>UT Bot Alerts by QuantNomad: key value, ATR period, repainting | Taught to Trade</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -75,7 +75,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--line);padding-block:56
 <header class="topbar"><div class="wrap"><a class="brand" href="https://taughttotrade.com/">Taught to Trade<small>Systems over signals.</small></a><nav class="nav" aria-label="Primary"><a href="https://taughttotrade.com/#explainers">Explainers</a><a href="https://taughttotrade.com/#scripts">Scripts</a><a class="nav-prices" href="https://taughttotrade.com/#prices">Prices</a><a class="btn primary" href="https://taughttotrade.gumroad.com/l/otnor?utm_source=site&amp;utm_medium=header&amp;utm_campaign=ut-bot-alerts" target="_blank" rel="noopener">Subscribe<span class="btn-long"> $19/mo</span></a></nav></div></header>
 <main id="top" class="article-page"><article class="article">
 <p class="kicker"><a href="https://taughttotrade.com/#explainers">Explainers</a> / UT Bot Alerts</p>
-<h1>UT Bot Alerts explained: what the code actually computes</h1>
+<h1>UT Bot Alerts by QuantNomad, explained from its source</h1>
 <p>UT Bot Alerts is a free, open-source TradingView script published by QuantNomad in 2020. It adds alerts to "UT Bot" by Yo_adriiiiaan, who credits HPotter for the original code. Because the code is open, nothing has to be guessed. It is about 40 lines and does one thing: it keeps an ATR trailing stop on the close and labels the bar where price crosses it.</p>
 <h2>What it computes</h2>
 <p>On every bar (our paraphrase, not the original code):</p>
@@ -132,7 +132,7 @@ bar colour: green above the stop, red below</code></pre>
 <p class="also-explained">Also explained: <a href="/repaint-checker">Repaint checker</a>, <a href="/vwap">VWAP</a>, <a href="/supertrend">Supertrend</a>, <a href="/rsi">RSI</a>, <a href="/nadaraya-watson-envelope">Nadaraya-Watson Envelope</a>, <a href="/squeeze-momentum">Squeeze Momentum</a>, <a href="/repainting">What is repainting on TradingView?</a>, <a href="/tradingview-backtest-accuracy">Is TradingView backtesting accurate?</a>, <a href="/chandelier-exit">Chandelier Exit</a>, <a href="/wavetrend">WaveTrend Oscillator</a>, <a href="/qqe-mod">QQE MOD</a>, <a href="/pivot-points-high-low">Pivot highs and lows</a>, <a href="/hull-suite">Hull Suite</a>, <a href="/range-filter">Range Filter</a>, <a href="/twin-range-filter">Twin Range Filter</a>, <a href="/halftrend">HalfTrend</a>, <a href="/zigzag">ZigZag++</a>, <a href="/ssl-hybrid">SSL Hybrid</a>, <a href="/cm-macd-mtf">CM MacD Ultimate MTF</a>, <a href="/volume-profile-fixed-range">Volume Profile / Fixed Range</a>, <a href="/adx-and-di">ADX and DI</a>, <a href="/support-resistance-channels">Support Resistance Channels</a>, <a href="/market-structure-break-order-block">Market Structure Break &amp; Order Block</a>, <a href="/order-block-finder">Order Block Finder</a></p>
 <div class="audit-offer next-step">
 <h2>Next steps</h2>
-<ul><li><strong>Check your own script.</strong> Paste its source into the free <a href="/repaint-checker">repaint checker</a>. It runs in your browser and flags known patterns.</li><li><strong>Read our rebuild.</strong> <a href="https://www.tradingview.com/script/9U7ccJIN-Taught-to-Trade-ATR-Trailing-Stop-with-Flip-Audit/" target="_blank" rel="noopener">ATR Trailing Stop with Flip Audit</a> is free and open source: the same stop rule with the stop line drawn and flips confirmed at the bar close.</li><li><strong>Get a script fixed.</strong> Compiles but behaves differently live, or changes after a reload? In a <a href="/audit">Pine Script Audit</a>, an AI model reads every line and writes a report on what to fix for $49, or also fixes those problems for $149. It cannot prove a script is safe.</li></ul>
+<ul><li><strong>Get a script fixed.</strong> Compiles but behaves differently live, or changes after a reload? In a <a href="/audit">Pine Script Audit</a>, an AI model reads every line and writes a report on what to fix for $49, or also fixes those problems for $149. It cannot prove a script is safe.</li><li><strong>Check your own script.</strong> Paste its source into the free <a href="/repaint-checker">repaint checker</a>. It runs in your browser and flags known patterns.</li><li><strong>Read our rebuild.</strong> <a href="https://www.tradingview.com/script/9U7ccJIN-Taught-to-Trade-ATR-Trailing-Stop-with-Flip-Audit/" target="_blank" rel="noopener">ATR Trailing Stop with Flip Audit</a> is free and open source: the same stop rule with the stop line drawn and flips confirmed at the bar close.</li></ul>
 </div>
 <section class="tt-signup" aria-labelledby="tt-signup-h">
 <style>
