@@ -46,3 +46,4 @@ Every explainer is written from the indicator's published open-source Pine code.
 - [Home](https://taughttotrade.com/): all explainers, open-source scripts and the monthly Teardown Letter
 - [Open-source Pine scripts on GitHub](https://github.com/obekheet/pine-script-indicators)
 - [Privacy](https://taughttotrade.com/privacy)
+- [TradingView's revised rules for selling invite-only scripts (Nov 2026): what changed and what did not](https://taughttotrade.com/tradingview-script-selling-terms): A plain-English summary of TradingView's November 2026 terms for invite-only script sales: own-channel sales, Marketplace Paid Spaces, the 100-seat limit from Feb 1, 2027, and the private-script deadlines. Where it fails: a moving target, not legal advice.
