@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0E1526">
+<meta name="description" content="How Breakout Probability (Expo) by Zeiierman works, from its published source: the two percentages, the step levels, the Win/Loss table, the alert text, and where it fails.">
+<link rel="canonical" href="https://taughttotrade.com/breakout-probability-expo">
+<title>Breakout Probability (Expo) by Zeiierman explained from the source: what the percentages count, what &quot;Profitability&quot; measures, and where it fails | Taught to Trade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>:root{--ink:#0e1526;--ink-2:#0a0f1c;--panel:#141e33;--paper:#f5f2ea;--mist:#bdc5d5;--dim:#8b95a8;--blue:#2f6fed;--blue-soft:#8fb0ff;--amber:#e8a13c;--line:rgba(245,242,234,.12);--line-strong:rgba(245,242,234,.28);--max:1180px;--sans:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;--mono:"DM Mono",ui-monospace,Consolas,monospace;color-scheme:dark}
+*{box-sizing:border-box}html{scroll-behavior:smooth;background:var(--ink)}
+body{margin:0;background:var(--ink);color:var(--paper);font:16px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:inherit}a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+h1,h2,h3{font-weight:300;letter-spacing:-.025em;text-wrap:balance}
+.wrap{width:100%;max-width:calc(var(--max) + 64px);margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+@media(min-width:768px){.wrap{padding-left:32px;padding-right:32px}}
+.kicker,.nav a,.btn,.button,.textlink{font-family:var(--mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase}
+.kicker{color:var(--dim);margin:0 0 18px}.kicker a{color:var(--dim);text-decoration:none;border-bottom:1px solid var(--line-strong)}.kicker a:hover{color:var(--paper)}
+.announce{margin:0;border-bottom:1px solid var(--line);text-align:center;font:500 .72rem/1.4 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mist);padding:10px 16px}
+.topbar{position:sticky;top:0;z-index:5;background:rgba(14,21,38,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:64px}
+.brand{text-decoration:none;font-weight:600;letter-spacing:-.01em;line-height:1.1}
+.brand small{display:block;font:400 .66rem/1.4 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.nav{display:flex;align-items:center;gap:22px}.nav a{text-decoration:none;color:var(--mist)}.nav a:hover{color:var(--paper)}
+@media(max-width:700px){.nav a:not(.btn):not(.nav-prices){display:none}.nav{gap:16px}}@media(max-width:520px){.brand small,.btn-long{display:none}}@media(max-width:420px){.nav .btn{padding:0 12px}}
+.btn,.button{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:46px;padding:0 20px;border:1px solid var(--line-strong);border-radius:2px;text-decoration:none;color:var(--paper);background:transparent;cursor:pointer;text-align:center}
+.btn:hover,.button:hover{border-color:var(--paper)}
+.btn.primary,.button:not(.secondary){background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.primary:hover,.button:not(.secondary):hover{background:#3f7cf5}
+.textlink{color:var(--paper);text-decoration:none;border-bottom:1px solid var(--line-strong);padding-bottom:3px;white-space:nowrap}.textlink:hover{border-color:var(--paper)}
+.ticks{height:16px;border-bottom:1px solid var(--line-strong);background:repeating-linear-gradient(90deg,var(--line-strong) 0 1px,transparent 1px 100%) left bottom/calc(100% / 12) 14px repeat-x,repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px 100%) left bottom/calc(100% / 60) 6px repeat-x}
+footer{background:var(--ink-2);border-top:1px solid var(--line);padding-block:56px 32px}
+.foot-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:16px;margin-bottom:22px}
+.foot-top .tag{margin:0;font-size:clamp(1.4rem,1.1rem + 1.2vw,2.2rem);font-weight:300;letter-spacing:-.02em}.foot-top .tag em{font-style:normal;color:var(--blue-soft)}
+.cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px 20px;padding-block:34px}
+@media(min-width:900px){.cols{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.cols h3{font:500 .72rem/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin:0 0 14px}
+.cols ul{list-style:none;margin:0;padding:0;display:grid;gap:9px}.cols a{text-decoration:none;color:var(--mist);font-size:.94rem}.cols a:hover{color:var(--paper)}
+.legal{border-top:1px solid var(--line);padding-top:22px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;font:400 .72rem/1.6 var(--mono);color:var(--dim)}.legal p{margin:0;max-width:80ch}
+@media(max-width:640px){.hide-sm{display:none}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}</style>
+<style>
+.article-page{padding-block:clamp(56px,8vw,104px)}
+.article{width:100%;max-width:calc(720px + 2 * 16px);margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.article h1{font-size:clamp(2.4rem,1.7rem + 3vw,4.2rem);line-height:1.04;margin:0 0 34px}
+.article h2{font-size:clamp(1.5rem,1.25rem + 1vw,2.1rem);line-height:1.15;margin:64px 0 18px;padding-top:22px;border-top:1px solid var(--line)}
+.article h3{font-size:1.3rem;margin:36px 0 12px}
+.article p,.article li{color:var(--mist);font-size:1.03rem;line-height:1.8}
+.article p{margin:0 0 22px}.article strong{color:var(--paper);font-weight:600}
+.article a{color:var(--blue-soft)}
+.article ul,.article ol{margin:0 0 28px;padding-left:1.3rem}.article li{margin:0 0 10px;padding-left:4px}
+.article pre{margin:24px 0 30px;padding:18px 20px;overflow-x:auto;border:1px solid var(--line);background:var(--panel);color:var(--paper);font:400 .9rem/1.7 var(--mono);white-space:pre-wrap}
+.article code{font-family:var(--mono);font-size:.92em}
+.article .table-wrap{overflow-x:auto;margin:24px 0 30px}
+.article table{width:100%;border-collapse:collapse;font-size:.94rem}
+.article th,.article td{text-align:left;padding:11px 12px 11px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--mist)}
+.article thead th{font:500 .72rem/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim);border-bottom-color:var(--line-strong)}
+.article .disclaimer{margin-top:46px;color:var(--dim);font-size:.88rem}
+.article-actions{display:flex;flex-wrap:wrap;align-items:center;gap:18px;margin-top:34px}
+.article-actions .back{font-family:var(--mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);text-decoration:none;border-bottom:1px solid var(--line-strong);padding-bottom:3px}
+.article-actions .back:hover{border-color:var(--paper)}
+@media(max-width:520px){.article h2{margin-top:52px}.article-actions .button{width:100%}}
+</style>
+<style>
+.article .also-explained{margin-top:46px;padding-top:24px;border-top:1px solid var(--line)}
+.article .also-explained a{color:var(--paper);text-decoration:none;border-bottom:1px solid var(--blue);padding-bottom:2px}
+.article .also-explained a:hover{color:#8bb0ff}
+</style>
+</head>
+<body>
+<p class="announce"><span class="hide-sm">Free: </span>indicator teardowns, a repaint checker and open-source scripts.<span class="hide-sm"> No buy/sell signals, ever.</span></p>
+<header class="topbar"><div class="wrap"><a class="brand" href="https://taughttotrade.com/">Taught to Trade<small>Systems over signals.</small></a><nav class="nav" aria-label="Primary"><a href="https://taughttotrade.com/#explainers">Explainers</a><a href="https://taughttotrade.com/#scripts">Scripts</a><a class="nav-prices" href="https://taughttotrade.com/#prices">Prices</a><a class="btn primary" href="https://taughttotrade.gumroad.com/l/otnor?utm_source=site&amp;utm_medium=header&amp;utm_campaign=breakout-probability-expo" target="_blank" rel="noopener">Subscribe<span class="btn-long"> $19/mo</span></a></nav></div></header>
+<main id="top" class="article-page"><article class="article">
+<p class="kicker"><a href="https://taughttotrade.com/#explainers">Explainers</a> / Breakout Probability (Expo)</p>
+<h1>Breakout Probability (Expo), explained from the source</h1>
+<p>Breakout Probability (Expo) is an open-source TradingView script by Zeiierman (about 32,700 boosts). On the latest bar it draws five price levels above the previous bar's high and five below its low, each with a percentage, and a small table headed Win, Loss and Profitability. This page walks through what the published code counts, what each setting changes, and where it fails. It does not say what price does next.</p>
+<h2>The surprise: the percentages are not a forecast, and the high and low numbers are not a pair</h2>
+<p>Each percentage is a frequency from the bars already loaded on your chart: of the bars that followed a green candle, the share whose high went at least this far above the previous high. The low side is counted separately, so it is a second, independent share. They are not two halves of one probability. In the author's own example the high reads 72.82 percent and the low 28.29 percent, which add to more than 100 because one bar can break both the high and the low. Reading the larger number as a direction misreads what is being counted.</p>
+<h2>Step 1: the previous candle sorts every bar into one of two groups</h2>
+<p>For each bar the script looks at the bar before it. If that bar closed above its open it is green; below its open, red. A bar after a candle that closed exactly at its open is in neither group and is ignored. Two sets of counts are kept, one for bars that follow a green candle and one for bars that follow a red one. The colour is the previous candle's body only, not a trend.</p>
+<h2>Step 2: the levels are the previous bar's high and low plus a step</h2>
+<p>The step is a percentage of the current bar's close: the Percentage Step setting (1.0 by default) divided by 100, times the close. Level 0 is the previous bar's high and its low. The next levels sit one, two, three and four steps beyond. Number of Lines (up to 5) chooses how many are shown. Because the step uses the current bar's close, on a finished bar the levels are fixed, and on the live bar the outer levels move whenever the close moves.</p>
+<h2>Step 3: what gets counted</h2>
+<p>On every bar and for every level, two yes/no questions are asked: did this bar's high reach the previous high plus that many steps, and did its low reach the previous low minus that many steps. A "yes" adds one to that level's count for the group the previous candle put it in. Level 0 counts any bar whose high equals or exceeds the previous high, so a tie counts as a new high. The percentage is the count divided by the number of bars in that group so far.</p>
+<h2>Step 4: the percentage text only updates when a level is hit</h2>
+<p>The stored percentage is rewritten only on bars where that level is hit. On bars where it is missed, the group total grows but the displayed number is not recalculated. A level that has not been hit for a long time therefore shows the percentage from its last hit, which is higher than the true ratio. In the synthetic test the gap was under half a point at 5,000 bars, but on one 500-bar run a rarely hit outer level was 33 points stale. The nearest levels are hit often enough that this is small; the outer ones are where it shows.</p>
+<h2>Step 5: which levels are shown</h2>
+<p>With "Disable 0.00%" ticked (the default) a level is drawn only if both its high-side and low-side percentages are above zero. If either is zero, both lines for that level are removed. Each bar deletes the previous bar's lines and draws a new set, so only the latest bar carries levels; scrolling back shows no history of them.</p>
+<h2>Step 6: the table called Win, Loss and Profitability</h2>
+<p>Each bar the script picks the side whose first-level percentage is higher (the high side wins a tie) and treats the previous bar's high, or low, as the test level. If the current bar reached it, one is added to Win; otherwise one is added to Loss. The table shows the totals and Win divided by Win plus Loss, labelled Profitability. That is a count of how often the larger of two frequencies was followed by a bar that went past the previous high or low. There is no entry price, no stop, no target and no costs, so it is not a profit figure. On random prices with no structure it read 68.5 to 72.5 percent across the test runs, because most bars simply extend past the previous bar's high or low on one side. The side choice also uses the percentages after the current bar has been added; leaving it out changed the table by under a point.</p>
+<h2>Step 7: the alert text</h2>
+<p>The alert, sent once per bar through <code>alert()</code>, can include the ticker, the previous high and low, a "BIAS" word and a percentage line. BIAS says BULLISH when the high-side percentage is at least the low-side one, else BEARISH; it is a label for which frequency is larger. In the percentage line, "High" is filled with the larger of the two numbers when the previous candle was green and the smaller when it was red, so the word High does not always sit on the high-side figure. Check the alert text against the chart before reading it.</p>
+<h2>What the settings change (synthetic prices, seeds 1 to 3)</h2>
+<p>Percentage Step sets how far apart the levels sit and therefore how often each is hit. Number of Lines only changes how many are shown. BG Color only fills between lines. Show Statistic Panel turns the table on. The alert checkboxes choose which lines go in the alert text. Nothing in the settings changes how the counts are made. These figures come from invented prices: they show how the code behaves, not whether any number means anything.</p>
+<h2>Where it fails</h2>
+<ul><li><strong>A frequency, not a probability of the next bar.</strong> It counts what happened on the bars loaded, so it changes with the chart's timeframe, symbol and how much history is loaded.</li><li><strong>High and low are separate.</strong> The two numbers can add to more than 100 and say nothing about which comes first.</li><li><strong>"Profitability" is not profit.</strong> It is how often a bar went past the previous high or low, with no trade, stop or cost behind it.</li><li><strong>The previous candle's colour is the only context.</strong> No trend, volatility or session is considered, and a candle that closes at its open is skipped.</li><li><strong>Stale percentages.</strong> A level's shown number is only refreshed when that level is hit, so rarely hit levels read too high.</li><li><strong>Live-bar levels move.</strong> The step uses the current close, so outer levels shift while a bar is open. How TradingView treats the stored counts on a live bar was not tested here.</li><li><strong>No history of levels.</strong> Only the latest bar's levels are drawn, so past levels cannot be checked on the chart.</li><li><strong>Alert text labels can mislead.</strong> BIAS and the High/Low wording are labels for which number is larger, not a call.</li><li><strong>Open and licensed.</strong> The code is under CC BY-NC-SA 4.0; this page describes it in our own words.</li></ul>
+<p><strong>Also explained:</strong> [Liquidity Swings [LuxAlgo]](/liquidity-swings-luxalgo) · <a href="/support-and-resistance-levels-with-breaks">Support and Resistance Levels with Breaks</a> · <a href="/trendlines-with-breaks">Trendlines with Breaks</a> · <a href="/order-block-finder">Order Block Finder</a> · <a href="/market-structure-break-order-block">Market Structure Break &amp; Order Block</a></p>
+<p><em>Educational only. Not financial advice. Nothing here is a recommendation to buy or sell anything. Breakout Probability (Expo) is by Zeiierman on TradingView, published under CC BY-NC-SA 4.0; this page describes its published open-source code in our own words and is not affiliated with the author. Simulation figures come from synthetic random-walk prices and say nothing about how the script trades.</em></p>
+<p class="also-explained">Also explained: <a href="/repaint-checker">Repaint checker</a>, <a href="/vwap">VWAP</a>, <a href="/supertrend">Supertrend</a>, <a href="/rsi">RSI</a>, <a href="/ut-bot-alerts">UT Bot Alerts</a>, <a href="/nadaraya-watson-envelope">Nadaraya-Watson Envelope</a>, <a href="/squeeze-momentum">Squeeze Momentum</a>, <a href="/repainting">What is repainting on TradingView?</a>, <a href="/tradingview-backtest-accuracy">Is TradingView backtesting accurate?</a>, <a href="/chandelier-exit">Chandelier Exit</a>, <a href="/wavetrend">WaveTrend Oscillator</a>, <a href="/qqe-mod">QQE MOD</a>, <a href="/pivot-points-high-low">Pivot highs and lows</a>, <a href="/hull-suite">Hull Suite</a>, <a href="/range-filter">Range Filter</a>, <a href="/twin-range-filter">Twin Range Filter</a>, <a href="/halftrend">HalfTrend</a>, <a href="/zigzag">ZigZag++</a>, <a href="/ssl-hybrid">SSL Hybrid</a>, <a href="/cm-macd-mtf">CM MacD Ultimate MTF</a>, <a href="/volume-profile-fixed-range">Volume Profile / Fixed Range</a>, <a href="/adx-and-di">ADX and DI</a>, <a href="/support-resistance-channels">Support Resistance Channels</a>, <a href="/market-structure-break-order-block">Market Structure Break &amp; Order Block</a>, <a href="/order-block-finder">Order Block Finder</a>, <a href="/pivot-point-supertrend">Pivot Point SuperTrend</a>, <a href="/trendlines-with-breaks">Trendlines with Breaks [LuxAlgo]</a>, <a href="/divergence-for-many-indicators">Divergence for Many Indicators</a>, <a href="/tradingview-script-selling-terms">TradingView script selling terms</a>, <a href="/support-and-resistance-levels-with-breaks">Support and Resistance Levels with Break</a>, <a href="/liquidity-swings-luxalgo">Liquidity Swings [LuxAlgo]</a>, <a href="/pine-script-errors">Pine Script errors</a></p>
+<div class="audit-offer next-step">
+<h2>Next steps</h2>
+<ul><li><strong>Get a script fixed.</strong> Compiles but behaves differently live, or changes after a reload? In a <a href="/audit">Pine Script Audit</a>, an AI model reads every line and writes a report on what to fix for $49, or also fixes those problems for $149. It cannot prove a script is safe.</li><li><strong>Check your own script.</strong> Paste its source into the free <a href="/repaint-checker">repaint checker</a>. It runs in your browser and flags known patterns.</li></ul>
+</div>
+<section class="tt-signup" aria-labelledby="tt-signup-h">
+<style>
+.tt-signup{margin:40px 0 8px;padding:22px 20px;border:1px solid rgba(91,141,239,.35);border-radius:12px;background:rgba(91,141,239,.06)}
+.tt-signup h2{margin:0 0 8px;font-size:1.25rem}
+.tt-signup p{margin:0 0 12px}
+.tt-signup-form{display:flex;gap:8px;flex-wrap:wrap}
+.tt-signup-form input{flex:1 1 220px;min-height:44px;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.25);color:inherit;font:inherit}
+.tt-signup-form button{min-height:44px;padding:10px 18px;border:0;border-radius:8px;background:#2F6FED;color:#fff;font:inherit;font-weight:600;cursor:pointer}
+.tt-signup-note{font-size:.85rem;opacity:.75;margin-top:10px}
+.tt-signup a{color:#8fb0ff}
+.tt-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+<h2 id="tt-signup-h">Get the next teardown by email</h2>
+<p>One short email when a new teardown or free tool goes live, about twice a month. No signals, no hype. Unsubscribe in one click.</p>
+<form class="tt-signup-form" action="https://app.kit.com/forms/10025491/subscriptions" method="post">
+<label class="tt-sr" for="tt-email">Email address</label>
+<input id="tt-email" type="email" name="email_address" required autocomplete="email" placeholder="you@example.com">
+<button type="submit">Sign up free</button>
+</form>
+<p class="tt-signup-done" hidden>Almost done. Check your inbox and click the confirmation link.</p>
+<p class="tt-signup-note">Sent with Kit. Your address is used only for these emails. <a href="/privacy">Privacy</a></p>
+<script>
+(function(){var s=document.currentScript.parentNode,f=s.querySelector('form'),d=s.querySelector('.tt-signup-done');
+f.addEventListener('submit',function(e){e.preventDefault();var b=f.querySelector('button');b.disabled=true;
+fetch(f.action,{method:'POST',body:new FormData(f),mode:'no-cors'}).then(function(){f.hidden=true;d.hidden=false;var u=location.pathname+location.search+location.hash;try{history[window.navigation?'replaceState':'pushState'](history.state,'',location.pathname.replace(/\/$/,'')+'/signup');history.replaceState(history.state,'',u);}catch(e){}}).catch(function(){f.submit();});});})();
+</script>
+</section>
+<div class="article-actions"><a class="button" href="https://taughttotrade.gumroad.com/l/otnor?utm_source=site&amp;utm_medium=nextstep&amp;utm_campaign=breakout-probability-expo" target="_blank" rel="noopener">Subscribe to the Teardown Letter: $19/mo</a><a class="back" href="https://taughttotrade.com/">Back to Taught to Trade</a><p style="flex-basis:100%;margin:0;font-size:.9rem;color:var(--muted,inherit)">No TradingView account yet? <a href="https://www.tradingview.com/?aff_id=1173690" target="_blank" rel="sponsored noopener">This affiliate link</a> gives you a $15 coupon toward a paid plan, and we earn a commission if you buy one. The free plan is enough to follow this page.</p></div>
+</article></main>
+<footer><div class="wrap">
+<div class="foot-top"><a class="brand" href="https://taughttotrade.com/">Taught to Trade<small>Systems over signals.</small></a><p class="tag">The machine shop, <em>not the treasure map.</em></p></div>
+<div class="ticks" aria-hidden="true"></div>
+<div class="cols">
+<div><h3>Read</h3><ul><li><a href="/repaint-checker">Repaint checker</a></li><li><a href="/repainting">What is repainting?</a></li><li><a href="/tradingview-backtest-accuracy">Is backtesting accurate?</a></li><li><a href="https://taughttotrade.com/#explainers">All explainers</a></li></ul></div>
+<div><h3>Scripts</h3><ul><li><a href="https://www.tradingview.com/u/taughttotrade/" target="_blank" rel="noopener">On TradingView</a></li><li><a href="https://github.com/obekheet/pine-script-indicators" target="_blank" rel="noopener">Code on GitHub</a></li><li><a href="https://taughttotrade.com/#scripts">All scripts</a></li></ul></div>
+<div><h3>Shop</h3><ul><li><a href="https://taughttotrade.gumroad.com/l/otnor?utm_source=site&amp;utm_medium=footer&amp;utm_campaign=breakout-probability-expo" target="_blank" rel="noopener">Teardown Letter</a></li><li><a href="https://taughttotrade.gumroad.com/l/field-edition?utm_source=site&amp;utm_medium=footer&amp;utm_campaign=breakout-probability-expo" target="_blank" rel="noopener">Free checklist</a></li><li><a href="https://taughttotrade.com/#prices">All prices</a></li></ul></div>
+<div><h3>About</h3><ul><li><a href="https://taughttotrade.com/#principles">How we work</a></li><li><a href="/privacy">Privacy</a></li></ul></div>
+</div>
+<div class="legal"><p>Educational tools only, not investment advice. Trading involves substantial risk of loss. No performance claims. You set your own alerts; nothing here sends buy/sell signals.</p><p>&copy; 2026 Taught to Trade</p></div>
+</div></footer>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "e0f6d58dfdf749eb83ae8e75100eb65c"}'></script><!-- End Cloudflare Web Analytics -->
+</body>
+</html>
