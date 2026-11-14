@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0E1526">
+<meta name="description" content="How Lorentzian Classification by jdehorty works, from its published source: the five features, the 8-neighbour vote, the 4-bar label, the kernel filter, and where it fails.">
+<link rel="canonical" href="https://taughttotrade.com/lorentzian-classification">
+<title>Lorentzian Classification by jdehorty explained from the source: what the vote counts, how the neighbours are picked, and where it fails | Taught to Trade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>:root{--ink:#0e1526;--ink-2:#0a0f1c;--panel:#141e33;--paper:#f5f2ea;--mist:#bdc5d5;--dim:#8b95a8;--blue:#2f6fed;--blue-soft:#8fb0ff;--amber:#e8a13c;--line:rgba(245,242,234,.12);--line-strong:rgba(245,242,234,.28);--max:1180px;--sans:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;--mono:"DM Mono",ui-monospace,Consolas,monospace;color-scheme:dark}
+*{box-sizing:border-box}html{scroll-behavior:smooth;background:var(--ink)}
+body{margin:0;background:var(--ink);color:var(--paper);font:16px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:inherit}a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+h1,h2,h3{font-weight:300;letter-spacing:-.025em;text-wrap:balance}
+.wrap{width:100%;max-width:calc(var(--max) + 64px);margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+@media(min-width:768px){.wrap{padding-left:32px;padding-right:32px}}
+.kicker,.nav a,.btn,.button,.textlink{font-family:var(--mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase}
+.kicker{color:var(--dim);margin:0 0 18px}.kicker a{color:var(--dim);text-decoration:none;border-bottom:1px solid var(--line-strong)}.kicker a:hover{color:var(--paper)}
+.announce{margin:0;border-bottom:1px solid var(--line);text-align:center;font:500 .72rem/1.4 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mist);padding:10px 16px}
+.topbar{position:sticky;top:0;z-index:5;background:rgba(14,21,38,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:64px}
+.brand{text-decoration:none;font-weight:600;letter-spacing:-.01em;line-height:1.1}
+.brand small{display:block;font:400 .66rem/1.4 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.nav{display:flex;align-items:center;gap:22px}.nav a{text-decoration:none;color:var(--mist)}.nav a:hover{color:var(--paper)}
+@media(max-width:700px){.nav a:not(.btn):not(.nav-prices){display:none}.nav{gap:16px}}@media(max-width:520px){.brand small,.btn-long{display:none}}@media(max-width:420px){.nav .btn{padding:0 12px}}
+.btn,.button{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:46px;padding:0 20px;border:1px solid var(--line-strong);border-radius:2px;text-decoration:none;color:var(--paper);background:transparent;cursor:pointer;text-align:center}
+.btn:hover,.button:hover{border-color:var(--paper)}
+.btn.primary,.button:not(.secondary){background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.primary:hover,.button:not(.secondary):hover{background:#3f7cf5}
+.textlink{color:var(--paper);text-decoration:none;border-bottom:1px solid var(--line-strong);padding-bottom:3px;white-space:nowrap}.textlink:hover{border-color:var(--paper)}
+.ticks{height:16px;border-bottom:1px solid var(--line-strong);background:repeating-linear-gradient(90deg,var(--line-strong) 0 1px,transparent 1px 100%) left bottom/calc(100% / 12) 14px repeat-x,repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px 100%) left bottom/calc(100% / 60) 6px repeat-x}
+footer{background:var(--ink-2);border-top:1px solid var(--line);padding-block:56px 32px}
+.foot-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:16px;margin-bottom:22px}
+.foot-top .tag{margin:0;font-size:clamp(1.4rem,1.1rem + 1.2vw,2.2rem);font-weight:300;letter-spacing:-.02em}.foot-top .tag em{font-style:normal;color:var(--blue-soft)}
+.cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px 20px;padding-block:34px}
+@media(min-width:900px){.cols{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.cols h3{font:500 .72rem/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin:0 0 14px}
+.cols ul{list-style:none;margin:0;padding:0;display:grid;gap:9px}.cols a{text-decoration:none;color:var(--mist);font-size:.94rem}.cols a:hover{color:var(--paper)}
+.legal{border-top:1px solid var(--line);padding-top:22px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;font:400 .72rem/1.6 var(--mono);color:var(--dim)}.legal p{margin:0;max-width:80ch}
+@media(max-width:640px){.hide-sm{display:none}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}</style>
+<style>
+.article-page{padding-block:clamp(56px,8vw,104px)}
+.article{width:100%;max-width:calc(720px + 2 * 16px);margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.article h1{font-size:clamp(2.4rem,1.7rem + 3vw,4.2rem);line-height:1.04;margin:0 0 34px}
+.article h2{font-size:clamp(1.5rem,1.25rem + 1vw,2.1rem);line-height:1.15;margin:64px 0 18px;padding-top:22px;border-top:1px solid var(--line)}
+.article h3{font-size:1.3rem;margin:36px 0 12px}
+.article p,.article li{color:var(--mist);font-size:1.03rem;line-height:1.8}
+.article p{margin:0 0 22px}.article strong{color:var(--paper);font-weight:600}
+.article a{color:var(--blue-soft)}
+.article ul,.article ol{margin:0 0 28px;padding-left:1.3rem}.article li{margin:0 0 10px;padding-left:4px}
+.article pre{margin:24px 0 30px;padding:18px 20px;overflow-x:auto;border:1px solid var(--line);background:var(--panel);color:var(--paper);font:400 .9rem/1.7 var(--mono);white-space:pre-wrap}
+.article code{font-family:var(--mono);font-size:.92em}
+.article .table-wrap{overflow-x:auto;margin:24px 0 30px}
+.article table{width:100%;border-collapse:collapse;font-size:.94rem}
+.article th,.article td{text-align:left;padding:11px 12px 11px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--mist)}
+.article thead th{font:500 .72rem/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim);border-bottom-color:var(--line-strong)}
+.article .disclaimer{margin-top:46px;color:var(--dim);font-size:.88rem}
+.article-actions{display:flex;flex-wrap:wrap;align-items:center;gap:18px;margin-top:34px}
+.article-actions .back{font-family:var(--mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);text-decoration:none;border-bottom:1px solid var(--line-strong);padding-bottom:3px}
+.article-actions .back:hover{border-color:var(--paper)}
+@media(max-width:520px){.article h2{margin-top:52px}.article-actions .button{width:100%}}
+</style>
+<style>
+.article .also-explained{margin-top:46px;padding-top:24px;border-top:1px solid var(--line)}
+.article .also-explained a{color:var(--paper);text-decoration:none;border-bottom:1px solid var(--blue);padding-bottom:2px}
+.article .also-explained a:hover{color:#8bb0ff}
+</style>
+</head>
+<body>
+<p class="announce"><span class="hide-sm">Free: </span>indicator teardowns, a repaint checker and open-source scripts.<span class="hide-sm"> No buy/sell signals, ever.</span></p>
+<header class="topbar"><div class="wrap"><a class="brand" href="https://taughttotrade.com/">Taught to Trade<small>Systems over signals.</small></a><nav class="nav" aria-label="Primary"><a href="https://taughttotrade.com/#explainers">Explainers</a><a href="https://taughttotrade.com/#scripts">Scripts</a><a class="nav-prices" href="https://taughttotrade.com/#prices">Prices</a><a class="btn primary" href="https://taughttotrade.gumroad.com/l/otnor?utm_source=site&amp;utm_medium=header&amp;utm_campaign=lorentzian-classification" target="_blank" rel="noopener">Subscribe<span class="btn-long"> $19/mo</span></a></nav></div></header>
+<main id="top" class="article-page"><article class="article">
+<p class="kicker"><a href="https://taughttotrade.com/#explainers">Explainers</a> / Lorentzian Classification</p>
+<h1>Lorentzian Classification, explained from the source</h1>
+<p>Machine Learning: Lorentzian Classification is an open-source TradingView script by jdehorty (about 37,700 boosts). It colours bars, writes a small number above or below each one, and draws Buy and Sell labels when its model changes sides. This page walks through its published code in order, says what each part counts, and ends with where it fails. It does not say what any signal will do next.</p>
+<h2>The surprise: it is not a nearest-neighbour search, and the label looks backward</h2>
+<p>Two things in the code are easy to miss. First, the author's own comments call the neighbour step an "approximate" search that keeps "consecutive furthest neighbors", and on invented prices the eight bars it keeps are far from the true eight nearest. Second, the label stored for each past bar is built from the four bars that ended on that bar, not the four bars after it. The sections below show both, with the lines that cause them.</p>
+<h2>Step 1: five features per bar</h2>
+<p>Each bar gets five numbers from the Feature Engineering settings. The defaults are RSI (14, 1), WT (10, 11), CCI (20, 1), ADX (20, 2) and RSI (9, 1); each can be switched to RSI, WT, CCI or ADX, and Feature Count (2 to 5) says how many are used. The normalising functions behind them live in an imported library (MLExtensions) that this page did not read, so it does not describe their scaling. The script pushes each bar's five values onto five arrays that grow for as long as the chart is loaded.</p>
+<h2>Step 2: the label for a past bar</h2>
+<p>For every bar the script also stores a label: -1 if the source price four bars earlier was lower than the source now, +1 if it was higher, 0 if equal. The source is Close by default. Read literally, a stored label describes the four bars that ended on that bar: a rise over those four bars is stored as -1, a fall as +1. The Show Default Exits tooltip says trades last four bars, so the author evidently has a four-bar horizon in mind; the code comments do not say which direction the label is meant to point, so treat the backward reading as something to check on your own chart by comparing a bar's number with the move four bars later.</p>
+<h2>Step 3: Lorentzian distance</h2>
+<p>The distance between the current bar and a stored bar is the sum, over the features in use, of the natural log of one plus the absolute difference. A small gap between two readings adds almost the same as in an ordinary distance; a very large gap adds much less than it would. That is the whole "Lorentzian" part in this script: a log-compressed distance that makes one extreme feature count for less.</p>
+<h2>Step 4: how the neighbours are picked</h2>
+<p>A true nearest-neighbour search would compute the distance to every stored bar and keep the eight smallest. This script scans stored bars from oldest to newest and keeps a running list of at most eight. A bar is skipped if its position is a multiple of four. Otherwise it is added when its distance is at least the current threshold, which starts at -1 on every bar, so the first candidate is always added. When the list grows past eight, the oldest entry is dropped and the threshold is reset to the distance stored at position six of the list. The author describes this as keeping a chronologically spread set and calls it an approximate search.</p>
+<p>Because a candidate must be at least as far as the threshold, the kept set tends to drift toward larger distances rather than smaller ones. In our Python port of just this loop (seeds 1 to 3, 1,500 invented bars, five stand-in oscillators, so the figures show the loop's behaviour, not the real library's features), the mean distance of the kept eight was 2.57, 2.41 and 2.53, while the true eight nearest bars averaged 0.107, 0.115 and 0.123. Nothing in the code is hidden here; the comments say "approximate". The point is how far the approximation sits from the thing its name suggests.</p>
+<h2>Step 5: old neighbours carry over</h2>
+<p>The two lists are declared with <code>var</code>, so they keep their contents from one bar to the next, and they are not cleared at the start of each bar's scan. A new bar therefore begins with the previous bar's eight neighbours still in place, and they are replaced only as new candidates pass the threshold test. In the same port, on average 4.78, 4.12 and 4.62 of the eight kept entries had been added during an earlier bar's scan. Whether that matters on a real chart depends on the real features; it is a reason the vote can change more slowly than the price does.</p>
+<h2>Step 6: the vote, the filters and the side</h2>
+<p>The vote ("prediction" in the script) is the sum of the kept labels, so with eight neighbours it runs from -8 to +8. If it is above zero and the filters pass, the script's side becomes long; below zero and passing, short; otherwise it keeps the previous side. The volatility filter and the regime filter are on by default (regime threshold -0.1), the ADX filter is off, and optional EMA and SMA filters (200 bars) are off. The filters come from the imported library. The number printed above or below each bar is this vote, and the bar colour fades with its size.</p>
+<h2>Step 7: the kernel filter and the Buy and Sell labels</h2>
+<p>A Buy or Sell label needs the side to have just changed and the kernel estimate to agree. The kernel estimate is a smoothed line of the source from an imported library (Rational Quadratic, lookback 8, relative weighting 8, regression level 25 by default). With Trade with Kernel on, a new long side needs that line to be rising from the previous bar, and a new short side needs it falling. Enhance Kernel Smoothing swaps that rule for a crossing of two kernel lines and lag 2.</p>
+<h2>Step 8: exits and the trade-stats table</h2>
+<p>Exits are hidden by default. Show Default Exits draws a cross four bars after an entry (or earlier if the side flips). Use Dynamic Exits ends the trade when the kernel turns instead. The table in the corner (a first ratio row, trade counts, a win-to-loss ratio and a count of early side flips) is produced by a function in the imported library; the script's own tooltip says it should not replace backtesting and is for calibration. This page did not read that function, so it does not say how a trade is entered, priced or closed in it, or whether costs are included.</p>
+<h2>The alerts</h2>
+<p>Eight alertcondition entries exist: open and close long, open and close short, open or close a position, and the kernel turning bullish or bearish. Each is a message that fires when its condition is true on a bar. On a bar that has not closed, a condition that is true can become false before the close, so check the alert's "once per bar close" option against what you want.</p>
+<h2>What the settings change</h2>
+<p>Neighbors Count sets how many labels are summed, so it sets the largest possible vote. Max Bars Back and Include Full History change which stored bars are scanned. Feature Count and the feature choices change the distance. Color Compression only changes colour. The filters change when the side may flip. None of the settings changes the "keep a candidate if it is at least the threshold" rule.</p>
+<h2>Where it fails</h2>
+<ul><li><strong>A count, not a forecast.</strong> The vote adds stored labels from bars that looked similar; it does not measure what the next bar or the next four bars will do.</li><li><strong>Approximate by design.</strong> The kept bars are not the nearest ones, and on invented prices they were far from them. A bigger Neighbors Count changes the threshold position, not that rule.</li><li><strong>The label may point backward.</strong> Each stored label is built from the four bars ending on that bar. Check it on your own chart before reading any number as a lead.</li><li><strong>Stale neighbours.</strong> The lists are never cleared between bars, so part of each bar's vote can come from an earlier bar's scan.</li><li><strong>Hidden parts.</strong> Feature scaling, the filters, the kernel and the trade-stats table sit in imported libraries that this page did not read.</li><li><strong>Trade stats are not a backtest.</strong> The script says so itself. A table with no costs described is not a result you can rely on.</li><li><strong>Settings reshape the output.</strong> Features, neighbours, filters and kernel values can all be changed until the chart looks clean; that says nothing about the next bar.</li><li><strong>Window not tested on long charts.</strong> The scan range is set in stored-bar positions; this page did not test charts with more than 2,000 loaded bars.</li><li><strong>Open and licensed.</strong> The code is under MPL 2.0 and credits its author; this page describes it in our own words.</li></ul>
+<p><strong>Also explained:</strong> <a href="/breakout-probability-expo">Breakout Probability (Expo)</a> · [Liquidity Swings [LuxAlgo]](/liquidity-swings-luxalgo) · <a href="/support-and-resistance-levels-with-breaks">Support and Resistance Levels with Breaks</a> · <a href="/trendlines-with-breaks">Trendlines with Breaks</a> · <a href="/order-block-finder">Order Block Finder</a></p>
+<p><em>Educational only. Not financial advice. Nothing here is a recommendation to buy or sell anything. Machine Learning: Lorentzian Classification is by jdehorty on TradingView, published under MPL 2.0; this page describes its published open-source code in our own words and is not affiliated with the author. Simulation figures come from synthetic random-walk prices and say nothing about how the script trades.</em></p>
+<p class="also-explained">Also explained: <a href="/repaint-checker">Repaint checker</a>, <a href="/vwap">VWAP</a>, <a href="/supertrend">Supertrend</a>, <a href="/rsi">RSI</a>, <a href="/ut-bot-alerts">UT Bot Alerts</a>, <a href="/nadaraya-watson-envelope">Nadaraya-Watson Envelope</a>, <a href="/squeeze-momentum">Squeeze Momentum</a>, <a href="/repainting">What is repainting on TradingView?</a>, <a href="/tradingview-backtest-accuracy">Is TradingView backtesting accurate?</a>, <a href="/chandelier-exit">Chandelier Exit</a>, <a href="/wavetrend">WaveTrend Oscillator</a>, <a href="/qqe-mod">QQE MOD</a>, <a href="/pivot-points-high-low">Pivot highs and lows</a>, <a href="/hull-suite">Hull Suite</a>, <a href="/range-filter">Range Filter</a>, <a href="/twin-range-filter">Twin Range Filter</a>, <a href="/halftrend">HalfTrend</a>, <a href="/zigzag">ZigZag++</a>, <a href="/ssl-hybrid">SSL Hybrid</a>, <a href="/cm-macd-mtf">CM MacD Ultimate MTF</a>, <a href="/volume-profile-fixed-range">Volume Profile / Fixed Range</a>, <a href="/adx-and-di">ADX and DI</a>, <a href="/support-resistance-channels">Support Resistance Channels</a>, <a href="/market-structure-break-order-block">Market Structure Break &amp; Order Block</a>, <a href="/order-block-finder">Order Block Finder</a>, <a href="/pivot-point-supertrend">Pivot Point SuperTrend</a>, <a href="/trendlines-with-breaks">Trendlines with Breaks [LuxAlgo]</a>, <a href="/divergence-for-many-indicators">Divergence for Many Indicators</a>, <a href="/tradingview-script-selling-terms">TradingView script selling terms</a>, <a href="/support-and-resistance-levels-with-breaks">Support and Resistance Levels with Break</a>, <a href="/liquidity-swings-luxalgo">Liquidity Swings [LuxAlgo]</a>, <a href="/pine-script-errors">Pine Script errors</a>, <a href="/breakout-probability-expo">Breakout Probability (Expo)</a>, <a href="/ai-pine-script-checks">Did ChatGPT or Claude write your Pine Sc</a></p>
+<div class="audit-offer next-step">
+<h2>Next steps</h2>
+<ul><li><strong>Get a script fixed.</strong> Compiles but behaves differently live, or changes after a reload? In a <a href="/audit">Pine Script Audit</a>, an AI model reads every line and writes a report on what to fix for $49, or also fixes those problems for $149. It cannot prove a script is safe.</li><li><strong>Check your own script.</strong> Paste its source into the free <a href="/repaint-checker">repaint checker</a>. It runs in your browser and flags known patterns.</li></ul>
+</div>
+<section class="tt-signup" aria-labelledby="tt-signup-h">
+<style>
+.tt-signup{margin:40px 0 8px;padding:22px 20px;border:1px solid rgba(91,141,239,.35);border-radius:12px;background:rgba(91,141,239,.06)}
+.tt-signup h2{margin:0 0 8px;font-size:1.25rem}
+.tt-signup p{margin:0 0 12px}
+.tt-signup-form{display:flex;gap:8px;flex-wrap:wrap}
+.tt-signup-form input{flex:1 1 220px;min-height:44px;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.25);color:inherit;font:inherit}
+.tt-signup-form button{min-height:44px;padding:10px 18px;border:0;border-radius:8px;background:#2F6FED;color:#fff;font:inherit;font-weight:600;cursor:pointer}
+.tt-signup-note{font-size:.85rem;opacity:.75;margin-top:10px}
+.tt-signup a{color:#8fb0ff}
+.tt-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+<h2 id="tt-signup-h">Get the next teardown by email</h2>
+<p>One short email when a new teardown or free tool goes live, about twice a month. No signals, no hype. Unsubscribe in one click.</p>
+<form class="tt-signup-form" action="https://app.kit.com/forms/10025491/subscriptions" method="post">
+<label class="tt-sr" for="tt-email">Email address</label>
+<input id="tt-email" type="email" name="email_address" required autocomplete="email" placeholder="you@example.com">
+<button type="submit">Sign up free</button>
+</form>
+<p class="tt-signup-done" hidden>Almost done. Check your inbox and click the confirmation link.</p>
+<p class="tt-signup-note">Sent with Kit. Your address is used only for these emails. <a href="/privacy">Privacy</a></p>
+<script>
+(function(){var s=document.currentScript.parentNode,f=s.querySelector('form'),d=s.querySelector('.tt-signup-done');
+f.addEventListener('submit',function(e){e.preventDefault();var b=f.querySelector('button');b.disabled=true;
+fetch(f.action,{method:'POST',body:new FormData(f),mode:'no-cors'}).then(function(){f.hidden=true;d.hidden=false;var u=location.pathname+location.search+location.hash;try{history[window.navigation?'replaceState':'pushState'](history.state,'',location.pathname.replace(/\/$/,'')+'/signup');history.replaceState(history.state,'',u);}catch(e){}}).catch(function(){f.submit();});});})();
+</script>
+</section>
+<div class="article-actions"><a class="button" href="https://taughttotrade.gumroad.com/l/otnor?utm_source=site&amp;utm_medium=nextstep&amp;utm_campaign=lorentzian-classification" target="_blank" rel="noopener">Subscribe to the Teardown Letter: $19/mo</a><a class="back" href="https://taughttotrade.com/">Back to Taught to Trade</a><p style="flex-basis:100%;margin:0;font-size:.9rem;color:var(--muted,inherit)">No TradingView account yet? <a href="https://www.tradingview.com/?aff_id=1173690" target="_blank" rel="sponsored noopener">This affiliate link</a> gives you a $15 coupon toward a paid plan, and we earn a commission if you buy one. The free plan is enough to follow this page.</p></div>
+</article></main>
+<footer><div class="wrap">
+<div class="foot-top"><a class="brand" href="https://taughttotrade.com/">Taught to Trade<small>Systems over signals.</small></a><p class="tag">The machine shop, <em>not the treasure map.</em></p></div>
+<div class="ticks" aria-hidden="true"></div>
+<div class="cols">
+<div><h3>Read</h3><ul><li><a href="/repaint-checker">Repaint checker</a></li><li><a href="/repainting">What is repainting?</a></li><li><a href="/tradingview-backtest-accuracy">Is backtesting accurate?</a></li><li><a href="https://taughttotrade.com/#explainers">All explainers</a></li></ul></div>
+<div><h3>Scripts</h3><ul><li><a href="https://www.tradingview.com/u/taughttotrade/" target="_blank" rel="noopener">On TradingView</a></li><li><a href="https://github.com/obekheet/pine-script-indicators" target="_blank" rel="noopener">Code on GitHub</a></li><li><a href="https://taughttotrade.com/#scripts">All scripts</a></li></ul></div>
+<div><h3>Shop</h3><ul><li><a href="https://taughttotrade.gumroad.com/l/otnor?utm_source=site&amp;utm_medium=footer&amp;utm_campaign=lorentzian-classification" target="_blank" rel="noopener">Teardown Letter</a></li><li><a href="https://taughttotrade.gumroad.com/l/field-edition?utm_source=site&amp;utm_medium=footer&amp;utm_campaign=lorentzian-classification" target="_blank" rel="noopener">Free checklist</a></li><li><a href="https://taughttotrade.com/#prices">All prices</a></li></ul></div>
+<div><h3>About</h3><ul><li><a href="https://taughttotrade.com/#principles">How we work</a></li><li><a href="/privacy">Privacy</a></li></ul></div>
+</div>
+<div class="legal"><p>Educational tools only, not investment advice. Trading involves substantial risk of loss. No performance claims. You set your own alerts; nothing here sends buy/sell signals.</p><p>&copy; 2026 Taught to Trade</p></div>
+</div></footer>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "e0f6d58dfdf749eb83ae8e75100eb65c"}'></script><!-- End Cloudflare Web Analytics -->
+</body>
+</html>
