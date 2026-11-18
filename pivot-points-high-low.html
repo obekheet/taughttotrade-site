@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0E1526">
-<meta name="description" content="How pivot high and pivot low indicators on TradingView work, from the source of the most popular one: why every pivot is drawn back in time after a fixed delay, what the ghost &quot;missed&quot; levels are, and where it fails.">
+<meta name="description" content="Pivot Points High Low &amp; Missed Reversal Levels by LuxAlgo, read from its published source: why every pivot is drawn back in time after a 50-bar delay, what the ghost &quot;missed&quot; levels are, and where it fails.">
 <link rel="canonical" href="https://taughttotrade.com/pivot-points-high-low">
-<title>Pivot Points High Low explained: why the pivot appears N bars late, and what &quot;missed reversal levels&quot; are | Taught to Trade</title>
+<title>Pivot Points High Low &amp; Missed Reversal Levels by LuxAlgo explained: why every pivot appears 50 bars late | Taught to Trade</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -75,7 +75,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--line);padding-block:56
 <header class="topbar"><div class="wrap"><a class="brand" href="https://taughttotrade.com/">Taught to Trade<small>Systems over signals.</small></a><nav class="nav" aria-label="Primary"><a href="https://taughttotrade.com/#explainers">Explainers</a><a href="https://taughttotrade.com/#scripts">Scripts</a><a class="nav-prices" href="https://taughttotrade.com/#prices">Prices</a><a class="btn primary" href="https://taughttotrade.gumroad.com/l/otnor?utm_source=site&amp;utm_medium=header&amp;utm_campaign=pivot-points-high-low" target="_blank" rel="noopener">Subscribe<span class="btn-long"> $19/mo</span></a></nav></div></header>
 <main id="top" class="article-page"><article class="article">
 <p class="kicker"><a href="https://taughttotrade.com/#explainers">Explainers</a> / Pivot highs and lows</p>
-<h1>Pivot highs and lows, explained from the source</h1>
+<h1>Pivot Points High Low &amp; Missed Reversal Levels by LuxAlgo, explained from the source</h1>
 <p>The most-boosted pivot script on TradingView is LuxAlgo's "Pivot Points High Low &amp; Missed Reversal Levels". It marks swing highs and lows on the chart, joins them with a zigzag, and adds ghost markers for turning points it calls "missed". On a finished chart it looks like it caught every top and bottom. This page explains, from the published source, why it looks that way. The short version: <strong>a pivot can only be known a fixed number of bars after it happens, and the marker is then drawn back at the bar where it happened.</strong></p>
 <h2>What a pivot high is</h2>
 <p>A pivot high is a bar whose high is higher than the highs of a set number of bars on each side. Pine Script has this built in: <code>ta.pivothigh(left, right)</code>. A pivot low is the mirror, using lows.</p>
