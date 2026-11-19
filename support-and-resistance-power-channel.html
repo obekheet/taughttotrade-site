@@ -76,7 +76,7 @@ footer{background:var(--ink-2);border-top:1px solid var(--line);padding-block:56
 <main id="top" class="article-page"><article class="article">
 <p class="kicker"><a href="https://taughttotrade.com/#explainers">Explainers</a> / Support and Resistance Power Channel by </p>
 <h1>Support and Resistance Power Channel by ChartPrime, explained from the source</h1>
-<p>Support and Resistance Power Channel is an open-source TradingView script by ChartPrime (about 22,500 boosts, published in May 2025). It draws a coloured zone at the top and bottom of recent price, a dotted midline, two "Power" numbers and a few diamond marks. This page walks through its published code in order, says what each part does, and ends with where it fails. It does not say what any zone or mark will do next.</p>
+<p>Support and Resistance Power Channel is an open-source TradingView script by ChartPrime (about 23,300 boosts, published in May 2025). It draws a coloured zone at the top and bottom of recent price, a dotted midline, two "Power" numbers and a few diamond marks. This page walks through its published code in order, says what each part does, and ends with where it fails. It does not say what any zone or mark will do next.</p>
 <h2>The surprise: everything is drawn on the last bar only</h2>
 <p>Most indicators calculate on every bar and leave a trail you can scroll back through. This one does almost nothing until the newest bar on the chart. There it looks back over the last 130 bars, draws everything in one go, and deletes what it drew on the bar before. So the chart never shows where the zones were yesterday or last week. What you see is always today's picture, laid over old bars.</p>
 <h2>Step 1: the highest high and the lowest low</h2>
