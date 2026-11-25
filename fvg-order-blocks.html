@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0E1526">
+<meta name="description" content="How FVG Order Blocks [BigBeluga] works, from its published source: a three-bar gap, a block one ATR thick drawn beside it, a count setting that shows one fewer, and where it fails.">
+<link rel="canonical" href="https://taughttotrade.com/fvg-order-blocks">
+<title>FVG Order Blocks by BigBeluga explained from the source: what the block really is, and where it fails | Taught to Trade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>:root{--ink:#0e1526;--ink-2:#0a0f1c;--panel:#141e33;--paper:#f5f2ea;--mist:#bdc5d5;--dim:#8b95a8;--blue:#2f6fed;--blue-soft:#8fb0ff;--amber:#e8a13c;--line:rgba(245,242,234,.12);--line-strong:rgba(245,242,234,.28);--max:1180px;--sans:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;--mono:"DM Mono",ui-monospace,Consolas,monospace;color-scheme:dark}
+*{box-sizing:border-box}html{scroll-behavior:smooth;background:var(--ink)}
+body{margin:0;background:var(--ink);color:var(--paper);font:16px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:inherit}a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+h1,h2,h3{font-weight:300;letter-spacing:-.025em;text-wrap:balance}
+.wrap{width:100%;max-width:calc(var(--max) + 64px);margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+@media(min-width:768px){.wrap{padding-left:32px;padding-right:32px}}
+.kicker,.nav a,.btn,.button,.textlink{font-family:var(--mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase}
+.kicker{color:var(--dim);margin:0 0 18px}.kicker a{color:var(--dim);text-decoration:none;border-bottom:1px solid var(--line-strong)}.kicker a:hover{color:var(--paper)}
+.announce{margin:0;border-bottom:1px solid var(--line);text-align:center;font:500 .72rem/1.4 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mist);padding:10px 16px}
+.topbar{position:sticky;top:0;z-index:5;background:rgba(14,21,38,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:64px}
+.brand{text-decoration:none;font-weight:600;letter-spacing:-.01em;line-height:1.1}
+.brand small{display:block;font:400 .66rem/1.4 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.nav{display:flex;align-items:center;gap:22px}.nav a{text-decoration:none;color:var(--mist)}.nav a:hover{color:var(--paper)}
+@media(max-width:700px){.nav a:not(.btn):not(.nav-prices){display:none}.nav{gap:16px}}@media(max-width:520px){.brand small,.btn-long{display:none}}@media(max-width:420px){.nav .btn{padding:0 12px}}
+.btn,.button{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:46px;padding:0 20px;border:1px solid var(--line-strong);border-radius:2px;text-decoration:none;color:var(--paper);background:transparent;cursor:pointer;text-align:center}
+.btn:hover,.button:hover{border-color:var(--paper)}
+.btn.primary,.button:not(.secondary){background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.primary:hover,.button:not(.secondary):hover{background:#3f7cf5}
+.textlink{color:var(--paper);text-decoration:none;border-bottom:1px solid var(--line-strong);padding-bottom:3px;white-space:nowrap}.textlink:hover{border-color:var(--paper)}
+.ticks{height:16px;border-bottom:1px solid var(--line-strong);background:repeating-linear-gradient(90deg,var(--line-strong) 0 1px,transparent 1px 100%) left bottom/calc(100% / 12) 14px repeat-x,repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px 100%) left bottom/calc(100% / 60) 6px repeat-x}
+footer{background:var(--ink-2);border-top:1px solid var(--line);padding-block:56px 32px}
+.foot-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:16px;margin-bottom:22px}
+.foot-top .tag{margin:0;font-size:clamp(1.4rem,1.1rem + 1.2vw,2.2rem);font-weight:300;letter-spacing:-.02em}.foot-top .tag em{font-style:normal;color:var(--blue-soft)}
+.cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px 20px;padding-block:34px}
+@media(min-width:900px){.cols{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.cols h3{font:500 .72rem/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin:0 0 14px}
+.cols ul{list-style:none;margin:0;padding:0;display:grid;gap:9px}.cols a{text-decoration:none;color:var(--mist);font-size:.94rem}.cols a:hover{color:var(--paper)}
+.legal{border-top:1px solid var(--line);padding-top:22px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;font:400 .72rem/1.6 var(--mono);color:var(--dim)}.legal p{margin:0;max-width:80ch}
+@media(max-width:640px){.hide-sm{display:none}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}</style>
+<style>
+.article-page{padding-block:clamp(56px,8vw,104px)}
+.article{width:100%;max-width:calc(720px + 2 * 16px);margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.article h1{font-size:clamp(2.4rem,1.7rem + 3vw,4.2rem);line-height:1.04;margin:0 0 34px}
+.article h2{font-size:clamp(1.5rem,1.25rem + 1vw,2.1rem);line-height:1.15;margin:64px 0 18px;padding-top:22px;border-top:1px solid var(--line)}
+.article h3{font-size:1.3rem;margin:36px 0 12px}
+.article p,.article li{color:var(--mist);font-size:1.03rem;line-height:1.8}
+.article p{margin:0 0 22px}.article strong{color:var(--paper);font-weight:600}
+.article a{color:var(--blue-soft)}
+.article ul,.article ol{margin:0 0 28px;padding-left:1.3rem}.article li{margin:0 0 10px;padding-left:4px}
+.article pre{margin:24px 0 30px;padding:18px 20px;overflow-x:auto;border:1px solid var(--line);background:var(--panel);color:var(--paper);font:400 .9rem/1.7 var(--mono);white-space:pre-wrap}
+.article code{font-family:var(--mono);font-size:.92em}
+.article .table-wrap{overflow-x:auto;margin:24px 0 30px}
+.article table{width:100%;border-collapse:collapse;font-size:.94rem}
+.article th,.article td{text-align:left;padding:11px 12px 11px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--mist)}
+.article thead th{font:500 .72rem/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim);border-bottom-color:var(--line-strong)}
+.article .disclaimer{margin-top:46px;color:var(--dim);font-size:.88rem}
+.article-actions{display:flex;flex-wrap:wrap;align-items:center;gap:18px;margin-top:34px}
+.article-actions .back{font-family:var(--mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);text-decoration:none;border-bottom:1px solid var(--line-strong);padding-bottom:3px}
+.article-actions .back:hover{border-color:var(--paper)}
+@media(max-width:520px){.article h2{margin-top:52px}.article-actions .button{width:100%}}
+</style>
+<style>
+.article .also-explained{margin-top:46px;padding-top:24px;border-top:1px solid var(--line)}
+.article .also-explained a{color:var(--paper);text-decoration:none;border-bottom:1px solid var(--blue);padding-bottom:2px}
+.article .also-explained a:hover{color:#8bb0ff}
+</style>
+</head>
+<body>
+<p class="announce"><span class="hide-sm">Free: </span>indicator teardowns, a repaint checker and open-source scripts.<span class="hide-sm"> No buy/sell signals, ever.</span></p>
+<header class="topbar"><div class="wrap"><a class="brand" href="https://taughttotrade.com/">Taught to Trade<small>Systems over signals.</small></a><nav class="nav" aria-label="Primary"><a href="https://taughttotrade.com/#explainers">Explainers</a><a href="https://taughttotrade.com/#scripts">Scripts</a><a class="nav-prices" href="https://taughttotrade.com/#prices">Prices</a><a class="btn primary" href="https://taughttotrade.gumroad.com/l/otnor?utm_source=site&amp;utm_medium=header&amp;utm_campaign=fvg-order-blocks" target="_blank" rel="noopener">Subscribe<span class="btn-long"> $19/mo</span></a></nav></div></header>
+<main id="top" class="article-page"><article class="article">
+<p class="kicker"><a href="https://taughttotrade.com/#explainers">Explainers</a> / FVG Order Blocks by BigBeluga</p>
+<h1>FVG Order Blocks by BigBeluga, explained from the source</h1>
+<p>FVG Order Blocks [BigBeluga] is an open-source TradingView indicator by BigBeluga, published in October 2024, with about 26,200 boosts. It marks three-bar price gaps (often called fair value gaps) and draws a coloured block next to each one. This page walks through the published code in order, says what each part does, and ends with where it fails. It does not say what any block means for the next move.</p>
+<h2>The surprise: the block is a band one ATR thick, not a candle</h2>
+<p>Many readers expect an "order block" to be a specific candle. In this script it is not. When a gap up is found, the block's top edge is the high of the first of the three bars, and its bottom edge is that high minus the 200-bar average true range. For a gap down, the block runs from the low of the first bar up by the same amount. So every block on the chart has the same thickness at the moment it is drawn, whatever the candles looked like, and that thickness is a volatility figure, not a price range that traded. The percentage printed in the block is the size of the gap as a share of price. The script uses no volume anywhere.</p>
+<h2>Step 1: finding the gap</h2>
+<p>On each closed bar, the script looks at the last three bars. A gap up needs the low of the newest bar to sit above the high of the bar two back, the middle bar's high to be above that same high, and the newest low to be above the oldest low. A gap down is the mirror image. The gap's size is then measured as a percentage of price, and the gap only counts if it is larger than "Filter Gaps by %", which is 0.5 by default. Only the most recent 2,000 bars are checked; that number is fixed in the code and is not a setting.</p>
+<h2>Step 2: the two boxes</h2>
+<p>Each gap that passes draws two things. The first is a small grey box over the gap itself, six bars wide, with the percentage on it. It is drawn once and never changed: the code does not track whether price later trades back through the gap. The second is the coloured block from the section above, which is stretched to the right edge of the chart. Its fill gets stronger as the gap's percentage approaches the largest gap of the last 200 bars, so the shading compares each gap with recent gaps on the same chart and is not an absolute scale.</p>
+<h2>Step 3: how a block is removed</h2>
+<p>A block goes away in three ways. First, when a whole bar sits beyond its far edge: for a block under a gap up, the bar's high must be below the block's bottom. A close through the block is not enough. Second, when another block on the same side has its top edge inside this one, this one is deleted. The rule looks only at where the top edges are, not at which block is older or had the larger gap. Third, when the number of blocks on a side reaches "Blocks Amount", the oldest is deleted. With "Broken Blocks" switched on, blocks removed the first way are greyed and kept in view.</p>
+<h2>Step 4: the optional arrows</h2>
+<p>"Order Blocks Signals" is off by default. When on, the script prints a small arrow when a bar's low sits above the top of a block after the previous bar's low was at or inside it (and the mirror for blocks above price). The arrow is placed on the previous bar, not on the bar that produced it. These are chart labels. The script has no alert conditions at all, so nothing in it can trigger a TradingView alert as published.</p>
+<h2>What the settings change</h2>
+<p>"Filter Gaps by %" (0.5) sets how large a gap must be, as a percentage of price. "Blocks Amount" (6) limits blocks per side. "Fair Value Gaps" shows or hides the small grey gap boxes. "Broken Blocks" keeps removed blocks on the chart in grey. "Order Blocks Signals" turns on the arrows. The 200-bar ATR, the 200-bar window for the shading and the 2,000-bar lookback are fixed in the code. The chart on the script's own page was made with 0.1 and 10 in the first two boxes, not the defaults of 0.5 and 6.</p>
+<h2>What we checked in Python</h2>
+<p>We ported the logic to Python and ran it on invented random-walk prices with 20 price ticks inside each bar, three runs of 20,000 bars, at two bar sizes. Before the filter, a three-bar gap formed on about 15% of bars in each direction, on prices with nothing in them to find.</p>
+<p>The filter decides almost everything. With bars that typically move 1.5%, about 63% of gaps passed the default 0.5% filter. With bars that typically move 0.2%, under 1% of gaps passed, which is about one block per thousand bars. With the listing picture's 0.1 filter on the same small bars, about half passed.</p>
+<p>"Blocks Amount" showed one fewer than the number entered. With 6, the most blocks ever standing on one side at a bar's close was 5; with 10 it was 9. The code deletes the oldest block as soon as the count reaches the setting, not when it passes it.</p>
+<p>With the defaults on the larger bars, about half of all blocks (48% to 51%) were removed by the overlap rule, 37% to 39% by a whole bar beyond the far edge, and 12% to 13% by the count limit. In the overlap removals, the deleted block had the larger gap percentage about half the time. Bars closed beyond a block's far edge without removing it 0.76 to 0.80 times per block on average.</p>
+<p>Inside a live bar, two things came and went. About 60 times per 1,000 bars, a block looked removed at the start of a bar and was back by its close, because the bar began wholly beyond the block and then traded back to it. With the arrows on, 90 to 94 arrows per 1,000 bars were still there at the close, and 125 to 137 appeared at the start of a bar and were gone by its close. These figures describe the code on invented data, not any market.</p>
+<h2>Where it fails</h2>
+<ul><li><strong>The block is not a traded range.</strong> Its thickness is the 200-bar ATR, the same for every block drawn at that moment, so the box edges are not prices where anything in particular happened.</li><li><strong>A percent filter does not travel between charts.</strong> The default 0.5% passed most gaps on large bars and almost none on small ones in our port. On low timeframes or quiet symbols the chart can be nearly empty at the default, and the listing's own picture uses 0.1.</li><li><strong>Gaps form on random prices.</strong> About 15% of bars completed a three-bar gap in each direction on invented data, so a gap on its own shows nothing about who traded.</li><li><strong>The count setting shows one fewer.</strong> "Blocks Amount" 6 shows at most 5 per side.</li><li><strong>Overlap removes blocks by position alone.</strong> When two blocks on a side overlap, the one deleted is chosen by where the top edges sit, and it was the larger-gap block about half the time in our port.</li><li><strong>A close through a block does not remove it.</strong> Removal needs an entire bar beyond the far edge, so price can close through a block, come back, and the block still stands.</li><li><strong>The grey gap boxes are never updated.</strong> They are six bars wide and stay as drawn; the script does not mark a gap as filled.</li><li><strong>Live and history can differ.</strong> Removal and the arrows are checked on every price update, so a block or an arrow can appear and vanish inside one bar. Reading the code, the gap flags are only refreshed when a bar closes, so for the one bar after a gap the live chart should also show an extra block built from shifted bars, which is gone at the close. We read this from the code and the tick port; we did not watch it on a live chart.</li><li><strong>Arrows are drawn one bar back and cannot alert.</strong> Each arrow sits on the bar before the one that caused it, and there are no alert conditions.</li><li><strong>Only the last 2,000 bars, after 200 bars of warm-up.</strong> Nothing older is marked, and the ATR needs 200 bars before a block has a thickness.</li><li><strong>No backtest and no outcome.</strong> The code draws boxes; it keeps no record of what happened after any of them.</li><li><strong>NonCommercial licence.</strong> The source is published under CC BY-NC-SA 4.0. This page describes the code in our own words and pastes none of it.</li></ul>
+<p><em>Educational only. Not financial advice. Nothing here is a recommendation to buy or sell anything. FVG Order Blocks [BigBeluga] is by BigBeluga on TradingView; this page describes its published open-source code in our own words and is not affiliated with the author. Simulation figures come from synthetic random-walk prices and say nothing about how the script trades.</em></p>
+<p class="also-explained">Also explained: <a href="/repaint-checker">Repaint checker</a>, <a href="/vwap">VWAP</a>, <a href="/supertrend">Supertrend</a>, <a href="/rsi">RSI</a>, <a href="/ut-bot-alerts">UT Bot Alerts</a>, <a href="/nadaraya-watson-envelope">Nadaraya-Watson Envelope</a>, <a href="/squeeze-momentum">Squeeze Momentum</a>, <a href="/repainting">What is repainting on TradingView?</a>, <a href="/tradingview-backtest-accuracy">Is TradingView backtesting accurate?</a>, <a href="/chandelier-exit">Chandelier Exit</a>, <a href="/wavetrend">WaveTrend Oscillator</a>, <a href="/qqe-mod">QQE MOD</a>, <a href="/pivot-points-high-low">Pivot highs and lows</a>, <a href="/hull-suite">Hull Suite</a>, <a href="/range-filter">Range Filter</a>, <a href="/twin-range-filter">Twin Range Filter</a>, <a href="/halftrend">HalfTrend</a>, <a href="/zigzag">ZigZag++</a>, <a href="/ssl-hybrid">SSL Hybrid</a>, <a href="/cm-macd-mtf">CM MacD Ultimate MTF</a>, <a href="/volume-profile-fixed-range">Volume Profile / Fixed Range</a>, <a href="/adx-and-di">ADX and DI</a>, <a href="/support-resistance-channels">Support Resistance Channels</a>, <a href="/market-structure-break-order-block">Market Structure Break &amp; Order Block</a>, <a href="/order-block-finder">Order Block Finder</a>, <a href="/pivot-point-supertrend">Pivot Point SuperTrend</a>, <a href="/trendlines-with-breaks">Trendlines with Breaks [LuxAlgo]</a>, <a href="/divergence-for-many-indicators">Divergence for Many Indicators</a>, <a href="/tradingview-script-selling-terms">TradingView script selling terms</a>, <a href="/support-and-resistance-levels-with-breaks">Support and Resistance Levels with Break</a>, <a href="/liquidity-swings-luxalgo">Liquidity Swings [LuxAlgo]</a>, <a href="/pine-script-errors">Pine Script errors</a>, <a href="/breakout-probability-expo">Breakout Probability (Expo)</a>, <a href="/ai-pine-script-checks">Did ChatGPT or Claude write your Pine Sc</a>, <a href="/lorentzian-classification">Lorentzian Classification</a>, <a href="/supertrend-ai-clustering">SuperTrend AI (Clustering)</a>, <a href="/machine-learning-adaptive-supertrend">Machine Learning Adaptive SuperTrend</a>, <a href="/dynamic-swing-anchored-vwap">Dynamic Swing Anchored VWAP</a>, <a href="/support-and-resistance-power-channel">Support and Resistance Power Channel by </a>, <a href="/support-and-resistance-high-volume-boxes">Support and Resistance (High Volume Boxe</a>, <a href="/trendline-breakouts-with-targets">Trendline Breakouts With Targets by Char</a>, <a href="/breakout-finder">Breakout Finder by LonesomeTheBlue</a>, <a href="/volume-flow-indicator">Volume Flow Indicator by LazyBear</a></p>
+<div class="audit-offer next-step">
+<h2>Next steps</h2>
+<ul><li><strong>Get a script fixed.</strong> Compiles but behaves differently live, or changes after a reload? In a <a href="/audit">Pine Script Audit</a>, an AI model reads every line and writes a report on what to fix for $49, or also fixes those problems for $149. It cannot prove a script is safe.</li><li><strong>Check your own script.</strong> Paste its source into the free <a href="/repaint-checker">repaint checker</a>. It runs in your browser and flags known patterns.</li></ul>
+</div>
+<section class="tt-signup" aria-labelledby="tt-signup-h">
+<style>
+.tt-signup{margin:40px 0 8px;padding:22px 20px;border:1px solid rgba(91,141,239,.35);border-radius:12px;background:rgba(91,141,239,.06)}
+.tt-signup h2{margin:0 0 8px;font-size:1.25rem}
+.tt-signup p{margin:0 0 12px}
+.tt-signup-form{display:flex;gap:8px;flex-wrap:wrap}
+.tt-signup-form input{flex:1 1 220px;min-height:44px;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.25);color:inherit;font:inherit}
+.tt-signup-form button{min-height:44px;padding:10px 18px;border:0;border-radius:8px;background:#2F6FED;color:#fff;font:inherit;font-weight:600;cursor:pointer}
+.tt-signup-note{font-size:.85rem;opacity:.75;margin-top:10px}
+.tt-signup a{color:#8fb0ff}
+.tt-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+<h2 id="tt-signup-h">Get the next teardown by email</h2>
+<p>One short email when a new teardown or free tool goes live, about twice a month. No signals, no hype. Unsubscribe in one click.</p>
+<form class="tt-signup-form" action="https://app.kit.com/forms/10025491/subscriptions" method="post">
+<label class="tt-sr" for="tt-email">Email address</label>
+<input id="tt-email" type="email" name="email_address" required autocomplete="email" placeholder="you@example.com">
+<button type="submit">Sign up free</button>
+</form>
+<p class="tt-signup-done" hidden>Almost done. Check your inbox and click the confirmation link.</p>
+<p class="tt-signup-note">Sent with Kit. Your address is used only for these emails. <a href="/privacy">Privacy</a></p>
+<script>
+(function(){var s=document.currentScript.parentNode,f=s.querySelector('form'),d=s.querySelector('.tt-signup-done');
+f.addEventListener('submit',function(e){e.preventDefault();var b=f.querySelector('button');b.disabled=true;
+fetch(f.action,{method:'POST',body:new FormData(f),mode:'no-cors'}).then(function(){f.hidden=true;d.hidden=false;var u=location.pathname+location.search+location.hash;try{history[window.navigation?'replaceState':'pushState'](history.state,'',location.pathname.replace(/\/$/,'')+'/signup');history.replaceState(history.state,'',u);}catch(e){}}).catch(function(){f.submit();});});})();
+</script>
+</section>
+<div class="article-actions"><a class="button" href="https://taughttotrade.gumroad.com/l/integrity-checklist?utm_source=site&amp;utm_medium=nextstep&amp;utm_campaign=fvg-order-blocks" target="_blank" rel="noopener">Before you trust its backtest: the Integrity Checklist, $19 one-off</a><a class="back" href="https://taughttotrade.com/">Back to Taught to Trade</a><p style="flex-basis:100%;margin:0;font-size:.9rem;color:var(--muted,inherit)">No TradingView account yet? <a href="https://www.tradingview.com/?aff_id=1173690" target="_blank" rel="sponsored noopener">This affiliate link</a> gives you a $15 coupon toward a paid plan, and we earn a commission if you buy one. The free plan is enough to follow this page.</p></div>
+</article></main>
+<footer><div class="wrap">
+<div class="foot-top"><a class="brand" href="https://taughttotrade.com/">Taught to Trade<small>Systems over signals.</small></a><p class="tag">The machine shop, <em>not the treasure map.</em></p></div>
+<div class="ticks" aria-hidden="true"></div>
+<div class="cols">
+<div><h3>Read</h3><ul><li><a href="/repaint-checker">Repaint checker</a></li><li><a href="/repainting">What is repainting?</a></li><li><a href="/tradingview-backtest-accuracy">Is backtesting accurate?</a></li><li><a href="https://taughttotrade.com/#explainers">All explainers</a></li></ul></div>
+<div><h3>Scripts</h3><ul><li><a href="https://www.tradingview.com/u/taughttotrade/" target="_blank" rel="noopener">On TradingView</a></li><li><a href="https://github.com/obekheet/pine-script-indicators" target="_blank" rel="noopener">Code on GitHub</a></li><li><a href="https://taughttotrade.com/#scripts">All scripts</a></li></ul></div>
+<div><h3>Shop</h3><ul><li><a href="https://taughttotrade.gumroad.com/l/otnor?utm_source=site&amp;utm_medium=footer&amp;utm_campaign=fvg-order-blocks" target="_blank" rel="noopener">Teardown Letter</a></li><li><a href="https://taughttotrade.gumroad.com/l/field-edition?utm_source=site&amp;utm_medium=footer&amp;utm_campaign=fvg-order-blocks" target="_blank" rel="noopener">Free checklist</a></li><li><a href="https://taughttotrade.com/#prices">All prices</a></li></ul></div>
+<div><h3>About</h3><ul><li><a href="https://taughttotrade.com/#principles">How we work</a></li><li><a href="/privacy">Privacy</a></li></ul></div>
+</div>
+<div class="legal"><p>Educational tools only, not investment advice. Trading involves substantial risk of loss. No performance claims. You set your own alerts; nothing here sends buy/sell signals.</p><p>&copy; 2026 Taught to Trade</p></div>
+</div></footer>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "e0f6d58dfdf749eb83ae8e75100eb65c"}'></script><!-- End Cloudflare Web Analytics -->
+</body>
+</html>
