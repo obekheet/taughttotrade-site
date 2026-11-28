@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0E1526">
+<meta name="description" content="How Rashad&#x27;s Fibonacci Bollinger Bands indicator works, from its published source: a 200-bar volume-weighted centre, twelve bands at fixed fractions of three standard deviations, what the ratios add, and where it fails.">
+<link rel="canonical" href="https://taughttotrade.com/fibonacci-bollinger-bands">
+<title>Fibonacci Bollinger Bands by Rashad explained from the source: what the Fibonacci levels really are, and where it fails | Taught to Trade</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>:root{--ink:#0e1526;--ink-2:#0a0f1c;--panel:#141e33;--paper:#f5f2ea;--mist:#bdc5d5;--dim:#8b95a8;--blue:#2f6fed;--blue-soft:#8fb0ff;--amber:#e8a13c;--line:rgba(245,242,234,.12);--line-strong:rgba(245,242,234,.28);--max:1180px;--sans:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;--mono:"DM Mono",ui-monospace,Consolas,monospace;color-scheme:dark}
+*{box-sizing:border-box}html{scroll-behavior:smooth;background:var(--ink)}
+body{margin:0;background:var(--ink);color:var(--paper);font:16px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:inherit}a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+h1,h2,h3{font-weight:300;letter-spacing:-.025em;text-wrap:balance}
+.wrap{width:100%;max-width:calc(var(--max) + 64px);margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+@media(min-width:768px){.wrap{padding-left:32px;padding-right:32px}}
+.kicker,.nav a,.btn,.button,.textlink{font-family:var(--mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase}
+.kicker{color:var(--dim);margin:0 0 18px}.kicker a{color:var(--dim);text-decoration:none;border-bottom:1px solid var(--line-strong)}.kicker a:hover{color:var(--paper)}
+.announce{margin:0;border-bottom:1px solid var(--line);text-align:center;font:500 .72rem/1.4 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--mist);padding:10px 16px}
+.topbar{position:sticky;top:0;z-index:5;background:rgba(14,21,38,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:64px}
+.brand{text-decoration:none;font-weight:600;letter-spacing:-.01em;line-height:1.1}
+.brand small{display:block;font:400 .66rem/1.4 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.nav{display:flex;align-items:center;gap:22px}.nav a{text-decoration:none;color:var(--mist)}.nav a:hover{color:var(--paper)}
+@media(max-width:700px){.nav a:not(.btn):not(.nav-prices){display:none}.nav{gap:16px}}@media(max-width:520px){.brand small,.btn-long{display:none}}@media(max-width:420px){.nav .btn{padding:0 12px}}
+.btn,.button{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:46px;padding:0 20px;border:1px solid var(--line-strong);border-radius:2px;text-decoration:none;color:var(--paper);background:transparent;cursor:pointer;text-align:center}
+.btn:hover,.button:hover{border-color:var(--paper)}
+.btn.primary,.button:not(.secondary){background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.primary:hover,.button:not(.secondary):hover{background:#3f7cf5}
+.textlink{color:var(--paper);text-decoration:none;border-bottom:1px solid var(--line-strong);padding-bottom:3px;white-space:nowrap}.textlink:hover{border-color:var(--paper)}
+.ticks{height:16px;border-bottom:1px solid var(--line-strong);background:repeating-linear-gradient(90deg,var(--line-strong) 0 1px,transparent 1px 100%) left bottom/calc(100% / 12) 14px repeat-x,repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px 100%) left bottom/calc(100% / 60) 6px repeat-x}
+footer{background:var(--ink-2);border-top:1px solid var(--line);padding-block:56px 32px}
+.foot-top{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:16px;margin-bottom:22px}
+.foot-top .tag{margin:0;font-size:clamp(1.4rem,1.1rem + 1.2vw,2.2rem);font-weight:300;letter-spacing:-.02em}.foot-top .tag em{font-style:normal;color:var(--blue-soft)}
+.cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px 20px;padding-block:34px}
+@media(min-width:900px){.cols{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.cols h3{font:500 .72rem/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin:0 0 14px}
+.cols ul{list-style:none;margin:0;padding:0;display:grid;gap:9px}.cols a{text-decoration:none;color:var(--mist);font-size:.94rem}.cols a:hover{color:var(--paper)}
+.legal{border-top:1px solid var(--line);padding-top:22px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;font:400 .72rem/1.6 var(--mono);color:var(--dim)}.legal p{margin:0;max-width:80ch}
+@media(max-width:640px){.hide-sm{display:none}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}</style>
+<style>
+.article-page{padding-block:clamp(56px,8vw,104px)}
+.article{width:100%;max-width:calc(720px + 2 * 16px);margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.article h1{font-size:clamp(2.4rem,1.7rem + 3vw,4.2rem);line-height:1.04;margin:0 0 34px}
+.article h2{font-size:clamp(1.5rem,1.25rem + 1vw,2.1rem);line-height:1.15;margin:64px 0 18px;padding-top:22px;border-top:1px solid var(--line)}
+.article h3{font-size:1.3rem;margin:36px 0 12px}
+.article p,.article li{color:var(--mist);font-size:1.03rem;line-height:1.8}
+.article p{margin:0 0 22px}.article strong{color:var(--paper);font-weight:600}
+.article a{color:var(--blue-soft)}
+.article ul,.article ol{margin:0 0 28px;padding-left:1.3rem}.article li{margin:0 0 10px;padding-left:4px}
+.article pre{margin:24px 0 30px;padding:18px 20px;overflow-x:auto;border:1px solid var(--line);background:var(--panel);color:var(--paper);font:400 .9rem/1.7 var(--mono);white-space:pre-wrap}
+.article code{font-family:var(--mono);font-size:.92em}
+.article .table-wrap{overflow-x:auto;margin:24px 0 30px}
+.article table{width:100%;border-collapse:collapse;font-size:.94rem}
+.article th,.article td{text-align:left;padding:11px 12px 11px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--mist)}
+.article thead th{font:500 .72rem/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim);border-bottom-color:var(--line-strong)}
+.article .disclaimer{margin-top:46px;color:var(--dim);font-size:.88rem}
+.article-actions{display:flex;flex-wrap:wrap;align-items:center;gap:18px;margin-top:34px}
+.article-actions .back{font-family:var(--mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--paper);text-decoration:none;border-bottom:1px solid var(--line-strong);padding-bottom:3px}
+.article-actions .back:hover{border-color:var(--paper)}
+@media(max-width:520px){.article h2{margin-top:52px}.article-actions .button{width:100%}}
+</style>
+<style>
+.article .also-explained{margin-top:46px;padding-top:24px;border-top:1px solid var(--line)}
+.article .also-explained a{color:var(--paper);text-decoration:none;border-bottom:1px solid var(--blue);padding-bottom:2px}
+.article .also-explained a:hover{color:#8bb0ff}
+</style>
+</head>
+<body>
+<p class="announce"><span class="hide-sm">Free: </span>indicator teardowns, a repaint checker and open-source scripts.<span class="hide-sm"> No buy/sell signals, ever.</span></p>
+<header class="topbar"><div class="wrap"><a class="brand" href="https://taughttotrade.com/">Taught to Trade<small>Systems over signals.</small></a><nav class="nav" aria-label="Primary"><a href="https://taughttotrade.com/#explainers">Explainers</a><a href="https://taughttotrade.com/#scripts">Scripts</a><a class="nav-prices" href="https://taughttotrade.com/#prices">Prices</a><a class="btn primary" href="https://taughttotrade.gumroad.com/l/otnor?utm_source=site&amp;utm_medium=header&amp;utm_campaign=fibonacci-bollinger-bands" target="_blank" rel="noopener">Subscribe<span class="btn-long"> $19/mo</span></a></nav></div></header>
+<main id="top" class="article-page"><article class="article">
+<p class="kicker"><a href="https://taughttotrade.com/#explainers">Explainers</a> / Fibonacci Bollinger Bands by Rashad</p>
+<h1>Fibonacci Bollinger Bands by Rashad, explained from the source</h1>
+<p>Fibonacci Bollinger Bands (shown on charts as FBB) is an open-source TradingView indicator by Rashad, published in June 2016, with about 33,100 boosts. It draws a centre line and six bands above and six below it, spaced at Fibonacci ratios. This page walks through the published code, says what each part really does, and ends with where it fails. It does not say whether the indicator makes money, and it gives no trades.</p>
+<h2>Step 1: the centre line</h2>
+<p>The centre is a 200-bar volume-weighted moving average (VWMA) of the typical price, (high + low + close) / 3. It is not the simple average a normal Bollinger Band uses. Bars with more volume count for more.</p>
+<p>The three inputs are the length (200), the price (typical price) and a multiplier (3.0).</p>
+<h2>Step 2: the width</h2>
+<p>The width is 3 times the standard deviation of the typical price over the same 200 bars. In Pine that standard deviation is measured around the simple average, not around the volume-weighted centre the bands hang from. When volume is spread evenly the two centres are close; when big moves carry big volume they drift apart.</p>
+<h2>Step 3: the twelve bands</h2>
+<p>Each band sits at a fixed fraction of that width: 0.236, 0.382, 0.5, 0.618, 0.764 and 1, above and below the centre. With the default multiplier of 3, that puts the bands at these distances from the centre, in standard deviations:</p>
+<div class="table-wrap"><table><thead><tr><th>Band</th><th>Distance</th></tr></thead><tbody><tr><td>0.236</td><td>0.71</td></tr><tr><td>0.382</td><td>1.15</td></tr><tr><td>0.5</td><td>1.5</td></tr><tr><td>0.618</td><td>1.85</td></tr><tr><td>0.764</td><td>2.29</td></tr><tr><td>1 (red above, green below)</td><td>3.0</td></tr></tbody></table></div>
+<p>So every band is an ordinary Bollinger Band with a different multiplier. The 0.618 band is the same line as a 1.854 standard-deviation band on a volume-weighted centre. The Fibonacci numbers decide where the lines are drawn; nothing in the code measures price against a Fibonacci level from a swing high or low, the way a Fibonacci retracement does. 0.764 is 1 minus 0.236, not a ratio from the Fibonacci sequence itself.</p>
+<h2>Step 4: what the code does not do</h2>
+<p>There are no alerts, no signals and no other timeframe. Every value comes from the current bar and the 199 before it, so the bands do not repaint: once a bar closes, its values stay. On the live bar they move with each tick until the bar closes, as any band does. The upper and lower bands share the same names in the data window (two lines called "0.236", two called "0.382" and so on), so the data window does not say which is which.</p>
+<h2>What we checked in Python</h2>
+<p>We ported the script to Python and ran it on invented random-walk prices with a typical move of 1% a bar, volume that rises with the size of the move, and the default settings: 20 runs of 5,000 bars each.</p>
+<p><strong>How often price sits outside each band.</strong> Share of bars where the typical price closed beyond the band, either side:</p>
+<div class="table-wrap"><table><thead><tr><th>Band</th><th>Outside, port</th><th>Outside, bell-curve theory</th></tr></thead><tbody><tr><td>0.236</td><td>69%</td><td>48%</td></tr><tr><td>0.382</td><td>49%</td><td>25%</td></tr><tr><td>0.5</td><td>33%</td><td>13%</td></tr><tr><td>0.618</td><td>20%</td><td>6%</td></tr><tr><td>0.764</td><td>8%</td><td>2%</td></tr><tr><td>1</td><td>1.3%</td><td>0.3%</td></tr></tbody></table></div>
+<p>Prices that wander sit outside every band two to four times as often as the textbook bell curve says. A 200-bar window is long, and a wandering price spends long stretches far from its own 200-bar average. Reading a touch of the 0.618 band as rare is wrong on this kind of data: price was beyond it on 1 bar in 5.</p>
+<p><strong>The outer band.</strong> The high or low reached one of the two outer bands on about 2.3% of bars.</p>
+<p><strong>The two centres.</strong> The volume-weighted centre sat a median 0.03 standard deviations from the simple average the width is built on, and at most 0.2. On this data the mismatch is small; it grows on markets where volume clusters on big moves.</p>
+<p>These figures describe the code on invented data, not any market.</p>
+<h2>Where it fails</h2>
+<ul><li><strong>The ratios are spacing, not levels.</strong> Each band is a Bollinger Band at a fixed multiple of the standard deviation. Changing the multiplier moves every band together; the Fibonacci names do not add a separate reason for price to react there.</li><li><strong>Bands are touched more often than they look.</strong> On wandering prices, the typical price sat beyond the 0.618 band on about 1 bar in 5 and beyond the inner band on about 2 bars in 3.</li><li><strong>No volume, no bands.</strong> The centre divides by volume. On a symbol with no volume data, the centre and every band have nothing to show. We read this from the code; we did not test it on a live symbol.</li><li><strong>Two different centres.</strong> The bands hang from a volume-weighted average but are sized by a deviation measured around the simple average.</li><li><strong>200 bars before anything shows.</strong> The first 199 bars have no lines, and every line lags.</li><li><strong>The live bar moves.</strong> Until the bar closes, the bands and the price's position against them can change.</li><li><strong>The data window names repeat.</strong> Upper and lower bands share names, so read the colour or the position, not the label.</li><li><strong>No alerts.</strong> The code has no alert conditions.</li></ul>
+<p><em>Educational only. Not financial advice. Nothing here is a recommendation to buy or sell anything. Fibonacci Bollinger Bands is by Rashad on TradingView; this page describes its published open-source code in our own words and is not affiliated with the author. Simulation figures come from synthetic random-walk prices and say nothing about how the script behaves on any market.</em></p>
+<p class="also-explained">Also explained: <a href="/repaint-checker">Repaint checker</a>, <a href="/vwap">VWAP</a>, <a href="/supertrend">Supertrend</a>, <a href="/rsi">RSI</a>, <a href="/ut-bot-alerts">UT Bot Alerts</a>, <a href="/nadaraya-watson-envelope">Nadaraya-Watson Envelope</a>, <a href="/squeeze-momentum">Squeeze Momentum</a>, <a href="/repainting">What is repainting on TradingView?</a>, <a href="/tradingview-backtest-accuracy">Is TradingView backtesting accurate?</a>, <a href="/chandelier-exit">Chandelier Exit</a>, <a href="/wavetrend">WaveTrend Oscillator</a>, <a href="/qqe-mod">QQE MOD</a>, <a href="/pivot-points-high-low">Pivot highs and lows</a>, <a href="/hull-suite">Hull Suite</a>, <a href="/range-filter">Range Filter</a>, <a href="/twin-range-filter">Twin Range Filter</a>, <a href="/halftrend">HalfTrend</a>, <a href="/zigzag">ZigZag++</a>, <a href="/ssl-hybrid">SSL Hybrid</a>, <a href="/cm-macd-mtf">CM MacD Ultimate MTF</a>, <a href="/volume-profile-fixed-range">Volume Profile / Fixed Range</a>, <a href="/adx-and-di">ADX and DI</a>, <a href="/support-resistance-channels">Support Resistance Channels</a>, <a href="/market-structure-break-order-block">Market Structure Break &amp; Order Block</a>, <a href="/order-block-finder">Order Block Finder</a>, <a href="/pivot-point-supertrend">Pivot Point SuperTrend</a>, <a href="/trendlines-with-breaks">Trendlines with Breaks [LuxAlgo]</a>, <a href="/divergence-for-many-indicators">Divergence for Many Indicators</a>, <a href="/tradingview-script-selling-terms">TradingView script selling terms</a>, <a href="/support-and-resistance-levels-with-breaks">Support and Resistance Levels with Break</a>, <a href="/liquidity-swings-luxalgo">Liquidity Swings [LuxAlgo]</a>, <a href="/pine-script-errors">Pine Script errors</a>, <a href="/breakout-probability-expo">Breakout Probability (Expo)</a>, <a href="/ai-pine-script-checks">Did ChatGPT or Claude write your Pine Sc</a>, <a href="/lorentzian-classification">Lorentzian Classification</a>, <a href="/supertrend-ai-clustering">SuperTrend AI (Clustering)</a>, <a href="/machine-learning-adaptive-supertrend">Machine Learning Adaptive SuperTrend</a>, <a href="/dynamic-swing-anchored-vwap">Dynamic Swing Anchored VWAP</a>, <a href="/support-and-resistance-power-channel">Support and Resistance Power Channel by </a>, <a href="/support-and-resistance-high-volume-boxes">Support and Resistance (High Volume Boxe</a>, <a href="/trendline-breakouts-with-targets">Trendline Breakouts With Targets by Char</a>, <a href="/breakout-finder">Breakout Finder by LonesomeTheBlue</a>, <a href="/volume-flow-indicator">Volume Flow Indicator by LazyBear</a>, <a href="/fvg-order-blocks">FVG Order Blocks by BigBeluga</a>, <a href="/williams-vix-fix">CM_Williams_Vix_Fix by ChrisMoody</a>, <a href="/bollinger-rsi-double-strategy">Bollinger + RSI Double Strategy by Chart</a>, <a href="/ultimate-moving-average-mtf">Ultimate Moving Average MTF by ChrisMood</a></p>
+<div class="audit-offer next-step">
+<h2>Next steps</h2>
+<ul><li><strong>Get a script fixed.</strong> Compiles but behaves differently live, or changes after a reload? In a <a href="/audit">Pine Script Audit</a>, an AI model reads every line and writes a report on what to fix for $49, or also fixes those problems for $149. It cannot prove a script is safe.</li><li><strong>Check your own script.</strong> Paste its source into the free <a href="/repaint-checker">repaint checker</a>. It runs in your browser and flags known patterns.</li></ul>
+</div>
+<section class="tt-signup" aria-labelledby="tt-signup-h">
+<style>
+.tt-signup{margin:40px 0 8px;padding:22px 20px;border:1px solid rgba(91,141,239,.35);border-radius:12px;background:rgba(91,141,239,.06)}
+.tt-signup h2{margin:0 0 8px;font-size:1.25rem}
+.tt-signup p{margin:0 0 12px}
+.tt-signup-form{display:flex;gap:8px;flex-wrap:wrap}
+.tt-signup-form input{flex:1 1 220px;min-height:44px;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.25);color:inherit;font:inherit}
+.tt-signup-form button{min-height:44px;padding:10px 18px;border:0;border-radius:8px;background:#2F6FED;color:#fff;font:inherit;font-weight:600;cursor:pointer}
+.tt-signup-note{font-size:.85rem;opacity:.75;margin-top:10px}
+.tt-signup a{color:#8fb0ff}
+.tt-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+<h2 id="tt-signup-h">Get the next teardown by email</h2>
+<p>One short email when a new teardown or free tool goes live, about twice a month. No signals, no hype. Unsubscribe in one click.</p>
+<form class="tt-signup-form" action="https://app.kit.com/forms/10025491/subscriptions" method="post">
+<label class="tt-sr" for="tt-email">Email address</label>
+<input id="tt-email" type="email" name="email_address" required autocomplete="email" placeholder="you@example.com">
+<button type="submit">Sign up free</button>
+</form>
+<p class="tt-signup-done" hidden>Almost done. Check your inbox and click the confirmation link.</p>
+<p class="tt-signup-note">Sent with Kit. Your address is used only for these emails. <a href="/privacy">Privacy</a></p>
+<script>
+(function(){var s=document.currentScript.parentNode,f=s.querySelector('form'),d=s.querySelector('.tt-signup-done');
+f.addEventListener('submit',function(e){e.preventDefault();var b=f.querySelector('button');b.disabled=true;
+fetch(f.action,{method:'POST',body:new FormData(f),mode:'no-cors'}).then(function(){f.hidden=true;d.hidden=false;var u=location.pathname+location.search+location.hash;try{history[window.navigation?'replaceState':'pushState'](history.state,'',location.pathname.replace(/\/$/,'')+'/signup');history.replaceState(history.state,'',u);}catch(e){}}).catch(function(){f.submit();});});})();
+</script>
+</section>
+<div class="article-actions"><a class="button" href="https://taughttotrade.gumroad.com/l/integrity-checklist?utm_source=site&amp;utm_medium=nextstep&amp;utm_campaign=fibonacci-bollinger-bands" target="_blank" rel="noopener">Before you trust its backtest: the Integrity Checklist, $19 one-off</a><a class="back" href="https://taughttotrade.com/">Back to Taught to Trade</a><p style="flex-basis:100%;margin:0;font-size:.9rem;color:var(--muted,inherit)">No TradingView account yet? <a href="https://www.tradingview.com/?aff_id=1173690" target="_blank" rel="sponsored noopener">This affiliate link</a> gives you a $15 coupon toward a paid plan, and we earn a commission if you buy one. The free plan is enough to follow this page.</p></div>
+</article></main>
+<footer><div class="wrap">
+<div class="foot-top"><a class="brand" href="https://taughttotrade.com/">Taught to Trade<small>Systems over signals.</small></a><p class="tag">The machine shop, <em>not the treasure map.</em></p></div>
+<div class="ticks" aria-hidden="true"></div>
+<div class="cols">
+<div><h3>Read</h3><ul><li><a href="/repaint-checker">Repaint checker</a></li><li><a href="/repainting">What is repainting?</a></li><li><a href="/tradingview-backtest-accuracy">Is backtesting accurate?</a></li><li><a href="https://taughttotrade.com/#explainers">All explainers</a></li></ul></div>
+<div><h3>Scripts</h3><ul><li><a href="https://www.tradingview.com/u/taughttotrade/" target="_blank" rel="noopener">On TradingView</a></li><li><a href="https://github.com/obekheet/pine-script-indicators" target="_blank" rel="noopener">Code on GitHub</a></li><li><a href="https://taughttotrade.com/#scripts">All scripts</a></li></ul></div>
+<div><h3>Shop</h3><ul><li><a href="https://taughttotrade.gumroad.com/l/otnor?utm_source=site&amp;utm_medium=footer&amp;utm_campaign=fibonacci-bollinger-bands" target="_blank" rel="noopener">Teardown Letter</a></li><li><a href="https://taughttotrade.gumroad.com/l/field-edition?utm_source=site&amp;utm_medium=footer&amp;utm_campaign=fibonacci-bollinger-bands" target="_blank" rel="noopener">Free checklist</a></li><li><a href="https://taughttotrade.com/#prices">All prices</a></li></ul></div>
+<div><h3>About</h3><ul><li><a href="https://taughttotrade.com/#principles">How we work</a></li><li><a href="/privacy">Privacy</a></li></ul></div>
+</div>
+<div class="legal"><p>Educational tools only, not investment advice. Trading involves substantial risk of loss. No performance claims. You set your own alerts; nothing here sends buy/sell signals.</p><p>&copy; 2026 Taught to Trade</p></div>
+</div></footer>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "e0f6d58dfdf749eb83ae8e75100eb65c"}'></script><!-- End Cloudflare Web Analytics -->
+</body>
+</html>
